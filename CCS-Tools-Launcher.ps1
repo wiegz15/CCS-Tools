@@ -100,6 +100,8 @@ Create-Button -text 'Update CCS Toolset' -location (110, $verticalPosition) -siz
         $destinationPath = $PSScriptRoot
         $launcherScript = Join-Path -Path $destinationPath -ChildPath "CCS-Tools-Launcher.ps1"
         $backupPath = "$launcherScript.backup"
+        $adFolder = Join-Path -Path $destinationPath -ChildPath "AD"
+        $vmwareFolder = Join-Path -Path $destinationPath -ChildPath "VMware"
 
         # Backup the launcher script if it exists
         if (Test-Path $launcherScript) {
@@ -110,10 +112,23 @@ Create-Button -text 'Update CCS Toolset' -location (110, $verticalPosition) -siz
         if (Test-Path (Join-Path -Path $destinationPath -ChildPath ".git")) {
             Set-Location $destinationPath
             git fetch --all
-            git reset --hard origin/Testing
-            git clean -fdx
+
+            # Ensure you are on the Testing branch
+            git checkout Testing
+
+            # Explicitly update the AD and VMware folders
+            git checkout origin/Testing -- AD
+            git checkout origin/Testing -- Vmware
+
+            # Clean untracked files in these folders only
+            git clean -fdx AD
+            git clean -fdx VMware
+
         } else {
             git clone -b Testing --single-branch $repositoryBaseUrl $destinationPath
+            Set-Location $destinationPath
+            # Ensure only AD and VMware folders are present
+            Remove-Item -Recurse -Exclude AD, VMware, ".git", $(Split-Path $launcherScript -Leaf)
         }
 
         # Restore the launcher script from backup
@@ -122,9 +137,9 @@ Create-Button -text 'Update CCS Toolset' -location (110, $verticalPosition) -siz
             Remove-Item -Path $backupPath
         }
 
-        [System.Windows.Forms.MessageBox]::Show("Tools updated successfully from the Testing branch", "Info")
+        [System.Windows.Forms.MessageBox]::Show("AD and VMware tools updated successfully from the Testing branch", "Info")
     } catch {
-        [System.Windows.Forms.MessageBox]::Show("Failed to update tools", "Error")    
+        [System.Windows.Forms.MessageBox]::Show("Failed to update AD and VMware tools", "Error")
     }
 }
 
