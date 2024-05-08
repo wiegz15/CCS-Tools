@@ -15,7 +15,7 @@ if (-not (Test-Path $adFolder)) {
 }
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'Script Launcher'
+$form.Text = 'CCS Tools Launcher'
 $form.Size = New-Object System.Drawing.Size(390,250)  # Adjusted form size for less space
 $form.StartPosition = 'CenterScreen'
 
