@@ -100,8 +100,6 @@ Create-Button -text 'Update CCS Toolset' -location (110, $verticalPosition) -siz
         $destinationPath = $PSScriptRoot
         $launcherScript = Join-Path -Path $destinationPath -ChildPath "CCS-Tools-Launcher.ps1"
         $backupPath = "$launcherScript.backup"
-        $adFolder = Join-Path -Path $destinationPath -ChildPath "AD"
-        $vmwareFolder = Join-Path -Path $destinationPath -ChildPath "VMware"
 
         # Backup the launcher script if it exists
         if (Test-Path $launcherScript) {
