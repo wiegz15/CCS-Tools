@@ -96,11 +96,36 @@ $verticalPosition = $form.Height - 100
 # Update Tools button
 Create-Button -text 'Update CCS Toolset' -location (110, $verticalPosition) -size ($buttonWidth, $buttonHeight, $horizontalPadding) -action {
     try {
-        $scriptPath = Join-Path -Path $PSScriptRoot -ChildPath "UpdateTools.ps1"
-        Start-Process powershell.exe -ArgumentList "-WindowStyle Hidden -File `"$scriptPath`""
-        [System.Windows.Forms.MessageBox]::Show("Tools updated successfully", "Info")
-} catch {
-    [System.Windows.Forms.MessageBox]::Show("Failed to update tools", "Error")    }
+        $repositoryBaseUrl = "https://github.com/wiegz15/CCS-Tools"
+        $destinationPath = $PSScriptRoot
+        $launcherScript = Join-Path -Path $destinationPath -ChildPath "CCS-Tools-Launcher.ps1"
+        $backupPath = "$launcherScript.backup"
+
+        # Backup the launcher script if it exists
+        if (Test-Path $launcherScript) {
+            Copy-Item -Path $launcherScript -Destination $backupPath -Force
+        }
+
+        # Perform git operations
+        if (Test-Path (Join-Path -Path $destinationPath -ChildPath ".git")) {
+            Set-Location $destinationPath
+            git fetch --all
+            git reset --hard origin/Testing
+            git clean -fdx
+        } else {
+            git clone -b Testing --single-branch $repositoryBaseUrl $destinationPath
+        }
+
+        # Restore the launcher script from backup
+        if (Test-Path $backupPath) {
+            Copy-Item -Path $backupPath -Destination $launcherScript -Force
+            Remove-Item -Path $backupPath
+        }
+
+        [System.Windows.Forms.MessageBox]::Show("Tools updated successfully from the Testing branch", "Info")
+    } catch {
+        [System.Windows.Forms.MessageBox]::Show("Failed to update tools", "Error")    
+    }
 }
 
 # Show the form
