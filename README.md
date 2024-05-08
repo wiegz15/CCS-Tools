@@ -32,7 +32,8 @@ This PowerShell script creates a graphical user interface (GUI) for managing VMw
 
 ### Prerequisites
 - PowerShell 5.1 or higher.
-- VMware PowerCLI module installed.
+- VMware PowerCLI module installed.  (Provides an option to install)
+- ImportExcel module installed. (Provides an option to install)
 - Proper permissions to connect to vCenter and execute scripts.
 
 ### Installation
