@@ -1,9 +1,9 @@
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-
 $vmwarePath = Join-Path -Path $PSScriptRoot -ChildPath "Vmware"
 $adFolder = Join-Path -Path $PSScriptRoot -ChildPath "AD"
+$gitPath = Join-Path -Path $PSScriptRoot -ChildPath "Git\bin\git.exe"
 
 # Ensure the VMware directory exists
 if (-not (Test-Path $vmwarePath)) {
@@ -106,27 +106,27 @@ Create-Button -text 'Update CCS Toolset' -location (110, $verticalPosition) -siz
             Copy-Item -Path $launcherScript -Destination $backupPath -Force
         }
 
-        # Perform git operations
+        # Perform git operations using the portable Git
         if (Test-Path (Join-Path -Path $destinationPath -ChildPath ".git")) {
             Set-Location $destinationPath
-            git fetch --all
+            & $gitPath fetch --all
 
             # Ensure you are on the Testing branch
-            git checkout Testing
+            & $gitPath checkout Testing
 
             # Explicitly update the AD and VMware folders
-            git checkout origin/Testing -- AD
-            git checkout origin/Testing -- Vmware
+            & $gitPath checkout origin/Testing -- AD
+            & $gitPath checkout origin/Testing -- Vmware
 
             # Clean untracked files in these folders only
-            git clean -fdx AD
-            git clean -fdx VMware
+            & $gitPath clean -fdx AD
+            & $gitPath clean -fdx Vmware
 
         } else {
-            git clone -b Testing --single-branch $repositoryBaseUrl $destinationPath
+            & $gitPath clone -b Testing --single-branch $repositoryBaseUrl $destinationPath
             Set-Location $destinationPath
             # Ensure only AD and VMware folders are present
-            Remove-Item -Recurse -Exclude AD, VMware, ".git", $(Split-Path $launcherScript -Leaf)
+            Remove-Item -Recurse -Exclude AD, Vmware, ".git", $(Split-Path $launcherScript -Leaf)
         }
 
         # Restore the launcher script from backup
