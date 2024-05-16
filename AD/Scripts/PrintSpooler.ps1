@@ -18,5 +18,5 @@ foreach ($dc in $domainControllers) {
 }
 
 # Export to Excel
-$excelPath = "C:\Path\To\Your\Directory\AD_Output.xlsx"
+$excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
 $printStatus | Export-Excel -Path $excelPath -WorksheetName "Print Status" -AutoSize -TableName "PrintInfo" -TableStyle Medium12 -Append

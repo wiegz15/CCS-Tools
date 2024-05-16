@@ -26,5 +26,5 @@ foreach ($dc in $domainControllers) {
 }
 
 # Export to Excel
-$excelPath = "C:\Path\To\Your\Directory\AD_Output.xlsx"
+$excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
 $generalInfo | Export-Excel -Path $excelPath -WorksheetName "General Info" -AutoSize -TableName "GeneralInfo" -TableStyle Medium9 -BoldTopRow -FreezeTopRow

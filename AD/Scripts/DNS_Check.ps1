@@ -24,5 +24,5 @@ foreach ($dc in $domainControllers) {
 }
 
 # Export to Excel
-$excelPath = "C:\Path\To\Your\Directory\AD_Output.xlsx"
+$excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
 $dnsSettings | Export-Excel -Path $excelPath -WorksheetName "DNS Settings" -AutoSize -TableName "DNSSettings" -TableStyle Medium10 -Append

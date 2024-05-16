@@ -24,5 +24,5 @@ foreach ($dc in $domainControllers) {
 }
 
 # Export to Excel
-$excelPath = "C:\Path\To\Your\Directory\AD_Output.xlsx"
+$excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
 $replicationTimes | Export-Excel -Path $excelPath -WorksheetName "Replication Times" -AutoSize -TableName "ReplicationTimes" -TableStyle Medium14 -Append

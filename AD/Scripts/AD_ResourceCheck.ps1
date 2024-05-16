@@ -43,5 +43,5 @@ foreach ($dc in $domainControllers) {
 }
 
 # Export to Excel
-$excelPath = "C:\Path\To\Your\Directory\AD_Output.xlsx"
+$excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
 $systemHealth | Export-Excel -Path $excelPath -WorksheetName "System Health" -AutoSize -TableName "SystemHealth" -TableStyle Medium13 -Append
