@@ -39,6 +39,6 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "HostUptime"
 
 # Export the results to an Excel file
-$hostdetails | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table8"
+$hostdetails | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "HostUptime"
 
 

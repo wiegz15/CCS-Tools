@@ -24,5 +24,5 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "vmCountPerHost"
 
 # Export the results to an Excel file
-$vmCountPerHost | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table9"
+$vmCountPerHost | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "vmCountPerHost"
 

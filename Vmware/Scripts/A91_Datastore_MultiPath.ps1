@@ -55,5 +55,5 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "DS_MPath"
 
 # Export the results to an Excel file
-$hostsInfo | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table3"
+$hostsInfo | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "DS_MPath"
 

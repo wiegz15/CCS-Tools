@@ -13,7 +13,7 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "Vm_Hardware_Compat"
 
 # Export the results to an Excel file
-$allVMs | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table19"
+$allVMs | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Vm_Hardware_Compat"
 
 
 

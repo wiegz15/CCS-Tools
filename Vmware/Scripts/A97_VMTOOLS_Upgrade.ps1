@@ -18,6 +18,6 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "VMTools_Updated"
 
 # Export the results to an Excel file
-$vmList | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table23"
+$vmList | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "VMTools_Updated"
 
 

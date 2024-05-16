@@ -17,6 +17,6 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "Datastore_Freespace"
 
 # Export the results to an Excel file
-$datastoresWithLessThan40PercentFree | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table1"
+$datastoresWithLessThan40PercentFree | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Datastore_Freespace"
 
 

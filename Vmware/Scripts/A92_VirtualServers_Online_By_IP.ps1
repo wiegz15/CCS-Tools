@@ -39,5 +39,5 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "VM_Online"
 
 # Export the results to an Excel file
-$vminfo | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table11"
+$vminfo | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "VM_Online"
 

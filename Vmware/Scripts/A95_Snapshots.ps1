@@ -27,5 +27,5 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "Snapshots"
 
 # Export the results to an Excel file
-$snapshots | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table21"
+$snapshots | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Snapshots"
 

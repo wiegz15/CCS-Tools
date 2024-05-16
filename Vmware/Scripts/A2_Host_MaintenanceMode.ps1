@@ -20,6 +20,6 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "Maint-Mode"
 
 # Export the results to an Excel file
-$esxiHosts | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table4"
+$esxiHosts | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Maint-Mode"
 
 

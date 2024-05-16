@@ -24,5 +24,5 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "TriggeredAlarms"
 
 # Export the results to an Excel file
-$Report | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table18"
+$Report | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "TriggeredAlarms"
 

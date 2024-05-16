@@ -30,7 +30,7 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "HA"
 
 # Export the results to an Excel file
-$results | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table2"
+$results | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "HA"
 
 
 

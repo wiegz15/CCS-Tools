@@ -35,7 +35,7 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "HighUtilization_VMs"
 
 # Export the results to an Excel file
-$exceedingVMs | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table10"
+$exceedingVMs | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "HighUtilization_VMs"
 
 
 

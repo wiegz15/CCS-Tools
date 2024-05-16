@@ -37,5 +37,5 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 $worksheetName = "NTPServer"
 
 # Export the results to an Excel file
-$results | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "Table5"
+$results | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "NTPServer"
 
