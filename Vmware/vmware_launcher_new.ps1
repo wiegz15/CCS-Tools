@@ -51,27 +51,30 @@ $binDir = Join-Path -Path $scriptDirectory -ChildPath "bin"
 $reportsDir = Join-Path -Path $parentDirectory -ChildPath "Reports"
 $vmwareDir = Join-Path -Path $scriptDirectory -ChildPath "Scripts"
 $zToolsDir = Join-Path -Path $vmwareDir -ChildPath "VMware-Ztools"
+$Assessments = Join-Path -Path $vmwareDir -ChildPath "Assessments"
 
 # Ensure the bin directory exists
 if (-not (Test-Path $binDir)) {
     New-Item -Path $binDir -ItemType Directory
 }
-
 # Ensure the Reports directory exists
 if (-not (Test-Path $reportsDir)) {
     New-Item -Path $reportsDir -ItemType Directory
 }
-
 # Ensure the VMware directory exists
+if (-not (Test-Path $vmwareDir)) {
+    New-Item -Path $vmwareDir -ItemType Directory
+    [System.Windows.Forms.MessageBox]::Show("VMware directory not found. A new VMware directory has been created.", "Directory Created")
+}
+# Ensure the ZTOOLS directory exists
 if (-not (Test-Path $zToolsDir)) {
     New-Item -Path $zToolsDir -ItemType Directory
     [System.Windows.Forms.MessageBox]::Show("ZTOOLS directory not found. A new ZTOOLS directory has been created.", "Directory Created")
 }
-
 # Ensure the ZTOOLS directory exists
-if (-not (Test-Path $vmwareDir)) {
-    New-Item -Path $vmwareDir -ItemType Directory
-    [System.Windows.Forms.MessageBox]::Show("VMware directory not found. A new VMware directory has been created.", "Directory Created")
+if (-not (Test-Path $Assessments)) {
+    New-Item -Path $Assessments -ItemType Directory
+    [System.Windows.Forms.MessageBox]::Show("Assessments directory not found. A new Assessments directory has been created.", "Directory Created")
 }
 
 # Define the path for the tools.ini file within the bin directory
@@ -357,9 +360,56 @@ $executeButton2.IsEnabled = $false
 $executeButton2.Add_Click({ Execute-Scripts $mainStackPanel2 $zToolsDir })
 $mainStackPanel2.Children.Add($executeButton2)
 
+# Tab 3: "Assessment"
+$tabItem3 = New-Object System.Windows.Controls.TabItem
+$tabItem3.Header = "Assessment"
+$scrollViewer3 = New-Object System.Windows.Controls.ScrollViewer
+$scrollViewer3.VerticalScrollBarVisibility = "Auto"
+$scrollViewer3.HorizontalAlignment = "Stretch"
+$scrollViewer3.VerticalAlignment = "Stretch"
+$scrollViewer3.Margin = 10
+$mainStackPanel3 = New-Object System.Windows.Controls.StackPanel
+$scrollViewer3.Content = $mainStackPanel3
+$tabItem3.Content = $scrollViewer3
+
+# "Select All" Checkbox
+$selectAllCheckbox = New-Object System.Windows.Controls.CheckBox
+$selectAllCheckbox.Content = "Select All"
+$selectAllCheckbox.Margin = 10
+$selectAllCheckbox.IsEnabled = $false
+$selectAllCheckbox.Add_Checked({
+    $mainStackPanel3.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] -and $_ -ne $selectAllCheckbox } | ForEach-Object {
+        $_.IsChecked = $true
+    }
+})
+$selectAllCheckbox.Add_Unchecked({
+    $mainStackPanel3.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] -and $_ -ne $selectAllCheckbox } | ForEach-Object {
+        $_.IsChecked = $false
+    }
+})
+$mainStackPanel3.Children.Add($selectAllCheckbox)
+
+# Load scripts for Tab 2
+$scriptFiles3 = Get-ChildItem -Path $Assessments -Filter *.ps1 | Sort-Object Name
+foreach ($scriptFile in $scriptFiles3) {
+    $checkBox = New-Object System.Windows.Controls.CheckBox
+    $checkBox.Content = $scriptFile.Name
+    $checkBox.Margin = 5
+    $checkBox.IsEnabled = $false
+    $mainStackPanel2.Children.Add($checkBox)
+}
+
+$executeButton3 = New-Object System.Windows.Controls.Button
+$executeButton3.Content = "Execute"
+$executeButton3.Margin = 5
+$executeButton3.IsEnabled = $false
+$executeButton3.Add_Click({ Execute-Scripts $mainStackPanel3 $Assessments })
+$mainStackPanel3.Children.Add($executeButton3)
+
 # Adding tabs to TabControl
 $tabControl.Items.Add($tabItem1)
 $tabControl.Items.Add($tabItem2)
+$tabControl.Items.Add($tabItem3)
 
 # Add the TabControl to the main container
 $mainContainer.Children.Add($tabControl)
