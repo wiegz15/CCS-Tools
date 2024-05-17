@@ -190,12 +190,16 @@ function UpdateUIElements {
     # Enable or disable execute buttons
     $executeButton1.IsEnabled = $global:connected
     $executeButton2.IsEnabled = $global:connected
+    $executeButton3.IsEnabled = $global:connected
 
     # Enable or disable checkboxes in both tabs
     $mainStackPanel1.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] } | ForEach-Object {
         $_.IsEnabled = $global:connected
     }
     $mainStackPanel2.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] } | ForEach-Object {
+        $_.IsEnabled = $global:connected
+    }
+    $mainStackPanel3.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] } | ForEach-Object {
         $_.IsEnabled = $global:connected
     }
 }
@@ -389,21 +393,59 @@ $selectAllCheckbox.Add_Unchecked({
 })
 $mainStackPanel3.Children.Add($selectAllCheckbox)
 
-# Load scripts for Tab 2
+# Load scripts for Tab 3
 $scriptFiles3 = Get-ChildItem -Path $Assessments -Filter *.ps1 | Sort-Object Name
 foreach ($scriptFile in $scriptFiles3) {
     $checkBox = New-Object System.Windows.Controls.CheckBox
     $checkBox.Content = $scriptFile.Name
     $checkBox.Margin = 5
     $checkBox.IsEnabled = $false
-    $mainStackPanel2.Children.Add($checkBox)
+    $mainStackPanel3.Children.Add($checkBox)
 }
 
 $executeButton3 = New-Object System.Windows.Controls.Button
 $executeButton3.Content = "Execute"
 $executeButton3.Margin = 5
 $executeButton3.IsEnabled = $false
-$executeButton3.Add_Click({ Execute-Scripts $mainStackPanel3 $Assessments })
+$executeButton3.Add_Click({
+    # Collect only script checkboxes, ignoring the "Select All" checkbox
+    $selectedScripts = $mainStackPanel3.Children | Where-Object {
+        $_ -is [System.Windows.Controls.CheckBox] -and
+        $_.IsChecked -and
+        $_.Content -ne 'Select All'
+    }
+    
+    if ($selectedScripts.Count -gt 0) {
+        $progressData = Show-ProgressForm -title "Executing Scripts" -message "Starting script executions..."
+        $totalScripts = $selectedScripts.Count
+        $currentScriptIndex = 0
+
+        foreach ($selectedScript in $selectedScripts) {
+            $scriptPath = Join-Path -Path $Assessments -ChildPath $selectedScript.Content
+            Update-ProgressBar -progressData $progressData -text "Running $($selectedScript.Content)..." -percent (($currentScriptIndex / $totalScripts) * 100)
+            . $scriptPath
+            $currentScriptIndex++
+        }
+
+        Update-ProgressBar -progressData $progressData -text "Scripts execution completed" -percent 100
+        Start-Sleep -Seconds 2
+        $progressData.Form.Close()
+        [System.Windows.Forms.MessageBox]::Show("Scripts execution completed", "Execution Complete")
+        
+    }
+
+    # Prompt user to open the Output.xlsx file
+    $openResponse = [System.Windows.Forms.MessageBox]::Show("Do you want to open the VMware_Assessment.xlsx file now?", "Open File?", [System.Windows.Forms.MessageBoxButtons]::YesNo)
+    if ($openResponse -eq [System.Windows.Forms.DialogResult]::Yes) {
+        $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Assessment.xlsx"
+        if (Test-Path $excelPath) {
+            Start-Process $excelPath  # Opens the file with the default application associated with .xlsx files
+        } else {
+            [System.Windows.Forms.MessageBox]::Show("VMware_Assessment.xlsx file not found.", "File Not Found")
+        }
+    }
+})
+
 $mainStackPanel3.Children.Add($executeButton3)
 
 # Adding tabs to TabControl
