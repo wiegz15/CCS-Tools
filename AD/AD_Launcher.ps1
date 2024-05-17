@@ -209,7 +209,7 @@ $resetButton.Add_Click({
     if (Test-Path $excelPath) {
         Remove-Item $excelPath -Force
     } else {
-        [System.Windows.Forms.MessageBox]::Show("AD_Output.xlsx file found.", "File Not Found")
+        [System.Windows.Forms.MessageBox]::Show("AD_Output.xlsx file found and cleared.", "File Not Found")
     }
 })
 $mainStackPanel1.Children.Add($resetButton)
