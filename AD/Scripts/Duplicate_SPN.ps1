@@ -43,14 +43,6 @@ if ($duplicateSPNs.Count -eq 0) {
     }
 }
 
-# Define the reports directory if not defined
-if (-not $reportsDir) {
-    $reportsDir = "C:\Reports"  # Adjust this path as needed
-    if (-not (Test-Path -Path $reportsDir)) {
-        New-Item -Path $reportsDir -ItemType Directory -Force
-    }
-}
-
 # Export to Excel
 $excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
 $output | Export-Excel -Path $excelPath -WorksheetName "Duplicate SPNs" -AutoSize -TableName "DuplicateSPNs" -TableStyle Medium22 -Append
