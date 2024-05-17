@@ -1,11 +1,12 @@
+# Import the necessary modules
 Import-Module ActiveDirectory
 Import-Module ImportExcel
 
 # Get all user accounts with SPNs
-$userSPNs = Get-ADUser -Filter {ServicePrincipalName -ne $null} -Properties ServicePrincipalName | Select-Object Name, SamAccountName, ServicePrincipalName
+$userSPNs = Get-ADUser -Filter * -Properties ServicePrincipalName | Where-Object { $_.ServicePrincipalName -ne $null } | Select-Object Name, SamAccountName, ServicePrincipalName
 
 # Get all computer accounts with SPNs
-$computerSPNs = Get-ADComputer -Filter {ServicePrincipalName -ne $null} -Properties ServicePrincipalName | Select-Object Name, SamAccountName, ServicePrincipalName
+$computerSPNs = Get-ADComputer -Filter * -Properties ServicePrincipalName | Where-Object { $_.ServicePrincipalName -ne $null } | Select-Object Name, SamAccountName, ServicePrincipalName
 
 # Combine results into a single array
 $allSPNs = $userSPNs + $computerSPNs
@@ -39,6 +40,14 @@ if ($duplicateSPNs.Count -eq 0) {
                 SPN         = $item.SPN
             }
         }
+    }
+}
+
+# Define the reports directory if not defined
+if (-not $reportsDir) {
+    $reportsDir = "C:\Reports"  # Adjust this path as needed
+    if (-not (Test-Path -Path $reportsDir)) {
+        New-Item -Path $reportsDir -ItemType Directory -Force
     }
 }
 

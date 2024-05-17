@@ -1,3 +1,4 @@
+# Import necessary modules
 Import-Module ActiveDirectory
 Import-Module ImportExcel
 
@@ -7,6 +8,10 @@ $domainDN = (Get-ADDomain).DistinguishedName
 # Get all Domain Controllers
 $domainControllers = Get-ADDomainController -Filter *
 
+# Get the Forest Functional Level
+$forest = Get-ADForest
+$forestFunctionalLevel = $forest.ForestMode
+
 $generalInfo = @()
 
 # Loop through each Domain Controller
@@ -15,16 +20,16 @@ foreach ($dc in $domainControllers) {
     $smbv1Status = (Get-WindowsFeature FS-SMB1 -ComputerName $dc.HostName).Installed
 
     $generalInfo += [PSCustomObject]@{
-        Domain           = $domainDN
-        NameOfDC         = $dc.HostName
-        IPV4Address      = $dc.IPv4Address
-        SMBv1Enabled     = if ($smbv1Status) {"Enabled"} else {"Disabled"}
-        OS               = $osInfo.Caption
-        OSBuild          = $osInfo.BuildNumber
-        FSMO             = ($dc.OperationMasterRoles -join ', ')
+        Domain               = $domainDN
+        NameOfDC             = $dc.HostName
+        IPV4Address          = $dc.IPv4Address
+        OS                   = $osInfo.Caption
+        OSBuild              = $osInfo.BuildNumber
+        FSMO                 = ($dc.OperationMasterRoles -join ', ')
+        ForestFunctionalLevel = $forestFunctionalLevel
     }
 }
 
 # Export to Excel
 $excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
-$generalInfo | Export-Excel -Path $excelPath -WorksheetName "General Info" -AutoSize -TableName "GeneralInfo" -TableStyle Medium9 -BoldTopRow -FreezeTopRow
+$generalInfo | Export-Excel -Path $excelPath -WorksheetName "General Info" -AutoSize -TableName "GeneralInfo" -TableStyle Medium9 -BoldTopRow -FreezeTopRow -Append
