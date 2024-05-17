@@ -23,13 +23,6 @@ foreach ($dc in $domainControllers) {
     }
 }
 
-# Define the directory for reports
-$reportsDir = "C:\Reports" # Update this path as needed
-
-# Ensure the directory exists
-if (-not (Test-Path -Path $reportsDir)) {
-    New-Item -Path $reportsDir -ItemType Directory | Out-Null
-}
 
 # Export to Excel
 $excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
