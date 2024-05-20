@@ -1,47 +1,23 @@
+# Import the Active Directory module
 Import-Module ActiveDirectory
-Import-Module ImportExcel
 
-# Get all Domain Controllers
+# Get all domain controllers in the domain
 $domainControllers = Get-ADDomainController -Filter *
 
-$smbVersions = @()
+# Initialize an array to hold the results
+$results = @()
 
-# Function to check SMB version status
-function Get-SMBStatus {
-    param (
-        [string]$ComputerName,
-        [string]$SMBVersion
-    )
-    $regPath = "SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters"
-    $regValue = "SMB$SMBVersion"
-
-    try {
-        $smbStatus = Invoke-Command -ComputerName $ComputerName -ScriptBlock {
-            param ($regPath, $regValue)
-            Get-ItemProperty -Path "HKLM:\$regPath" -Name $regValue -ErrorAction Stop
-        } -ArgumentList $regPath, $regValue
-        return $true
-    } catch {
-        return $false
-    }
-}
-
-# Loop through each Domain Controller
+# Loop through each domain controller
 foreach ($dc in $domainControllers) {
-    $dcName = $dc.HostName
-
-    $smb1Enabled = Get-SMBStatus -ComputerName $dcName -SMBVersion 1
-    $smb2Enabled = Get-SMBStatus -ComputerName $dcName -SMBVersion 2
-    $smb3Enabled = Get-SMBStatus -ComputerName $dcName -SMBVersion 3
-
-    $smbVersions += [PSCustomObject]@{
-        DCName     = $dcName
-        SMB1Enabled = if ($smb1Enabled) {"Enabled"} else {"Disabled"}
-        SMB2Enabled = if ($smb2Enabled) {"Enabled"} else {"Disabled"}
-        SMB3Enabled = if ($smb3Enabled) {"Enabled"} else {"Disabled"}
+    # Use Invoke-Command to run the Get-SmbServerConfiguration cmdlet on each domain controller
+    $smbConfig = Invoke-Command -ComputerName $dc.HostName -ScriptBlock {
+        Get-SmbServerConfiguration | Select-Object PSComputerName, EnableSMB1Protocol, EnableSMB2Protocol
     }
+    
+    # Add the result to the results array
+    $results += $smbConfig
 }
 
-# Export to Excel
+# Note: This script requires appropriate permissions to run commands remotely and access AD information.
 $excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
-$smbVersions | Export-Excel -Path $excelPath -WorksheetName "SMB Versions" -AutoSize -TableName "SMBVersions" -TableStyle Medium15 -Append
+$results | Export-Excel -Path $excelPath -WorksheetName "SMB Versions" -AutoSize -TableName "SMBVersions" -TableStyle Medium15 -Append
