@@ -39,8 +39,8 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 
 # Get the name of the current script for the worksheet name
 
-$worksheetName = "VSWITCHES-AttachedHosts"
+$worksheetName = "VSWITCHESAttachedHosts"
 
 # Export the results to an Excel file
-$results | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "VSWITCHES-AttachedHosts"
+$results | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "VSWITCHESAttachedHosts"
 
