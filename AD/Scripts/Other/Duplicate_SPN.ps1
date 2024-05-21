@@ -44,5 +44,5 @@ if ($duplicateSPNs.Count -eq 0) {
 }
 
 # Export to Excel
-$excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
-$output | Export-Excel -Path $excelPath -WorksheetName "Duplicate SPNs" -AutoSize -TableName "DuplicateSPNs" -TableStyle Medium22 -Append
+$excelPath = Join-Path -Path $reportsDir -ChildPath "AD_DuplicateSPN.xlsx"
+$output | Export-Excel -Path $excelPath -WorksheetName "Duplicate SPNs" -AutoSize -TableName "DuplicateSPNs" -TableStyle Medium22

@@ -3,7 +3,6 @@ Add-Type -AssemblyName System.Drawing
 
 $vmwarePath = Join-Path -Path $PSScriptRoot -ChildPath "Vmware"
 $adFolder = Join-Path -Path $PSScriptRoot -ChildPath "AD"
-$gitExe = "C:\Program Files\Git\cmd\git.exe"
 
 # Ensure the VMware directory exists
 if (-not (Test-Path $vmwarePath)) {

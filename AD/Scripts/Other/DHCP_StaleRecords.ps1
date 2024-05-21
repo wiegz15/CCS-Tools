@@ -45,7 +45,7 @@ foreach ($machine in $machines) {
 }
 
 # Path for the Excel file
-$excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
+$excelPath = Join-Path -Path $reportsDir -ChildPath "DHCP_Stale.xlsx"
 
 # Export stale data to Excel
 $staleData | Export-Excel -Path $excelPath -WorksheetName "Stale_Leases" -AutoSize -TableName "Stale_Leases" -TableStyle Medium11 -Append

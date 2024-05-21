@@ -49,7 +49,7 @@ $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $parentDirectory = Split-Path -Parent $scriptDirectory
 $reportsDir = Join-Path -Path $parentDirectory -ChildPath "Reports"
 $adScriptsDir = Join-Path -Path $scriptDirectory -ChildPath "Scripts"
-#$extrascripts = Join-Path -Path $vmwareDir -ChildPath "Extra DIR"
+$Otherscripts = Join-Path -Path $adScriptsDir -ChildPath "Other"
 
 # Ensure the Reports directory exists
 if (-not (Test-Path $reportsDir)) {
@@ -214,55 +214,77 @@ $resetButton.Add_Click({
 })
 $mainStackPanel1.Children.Add($resetButton)
 
-# # Tab 2: IF NEEDED
-# $tabItem2 = New-Object System.Windows.Controls.TabItem
-# $tabItem2.Header = "Header"
-# $scrollViewer2 = New-Object System.Windows.Controls.ScrollViewer
-# $scrollViewer2.VerticalScrollBarVisibility = "Auto"
-# $scrollViewer2.HorizontalAlignment = "Stretch"
-# $scrollViewer2.VerticalAlignment = "Stretch"
-# $scrollViewer2.Margin = 10
-# $mainStackPanel2 = New-Object System.Windows.Controls.StackPanel
-# $scrollViewer2.Content = $mainStackPanel2
-# $tabItem2.Content = $scrollViewer2
+# Tab 2: Other Reports
+$tabItem2 = New-Object System.Windows.Controls.TabItem
+$tabItem2.Header = "Other"
+$scrollViewer2 = New-Object System.Windows.Controls.ScrollViewer
+$scrollViewer2.VerticalScrollBarVisibility = "Auto"
+$scrollViewer2.HorizontalAlignment = "Stretch"
+$scrollViewer2.VerticalAlignment = "Stretch"
+$scrollViewer2.Margin = 10
+$mainStackPanel2 = New-Object System.Windows.Controls.StackPanel
+$scrollViewer2.Content = $mainStackPanel2
+$tabItem2.Content = $scrollViewer2
 
-# # "Select All" Checkbox
-# $selectAllCheckbox = New-Object System.Windows.Controls.CheckBox
-# $selectAllCheckbox.Content = "Select All"
-# $selectAllCheckbox.Margin = 10
-# $selectAllCheckbox.IsEnabled = $false
-# $selectAllCheckbox.Add_Checked({
-#     $mainStackPanel2.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] -and $_ -ne $selectAllCheckbox } | ForEach-Object {
-#         $_.IsChecked = $true
-#     }
-# })
-# $selectAllCheckbox.Add_Unchecked({
-#     $mainStackPanel2.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] -and $_ -ne $selectAllCheckbox } | ForEach-Object {
-#         $_.IsChecked = $false
-#     }
-# })
-# $mainStackPanel2.Children.Add($selectAllCheckbox)
+# "Select All" Checkbox
+$selectAllCheckbox = New-Object System.Windows.Controls.CheckBox
+$selectAllCheckbox.Content = "Select All"
+$selectAllCheckbox.Margin = 10
+$selectAllCheckbox.Add_Checked({
+    $mainStackPanel2.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] -and $_ -ne $selectAllCheckbox } | ForEach-Object {
+        $_.IsChecked = $true
+    }
+})
+$selectAllCheckbox.Add_Unchecked({
+    $mainStackPanel2.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] -and $_ -ne $selectAllCheckbox } | ForEach-Object {
+        $_.IsChecked = $false
+    }
+})
+$mainStackPanel2.Children.Add($selectAllCheckbox)
 
-# # Load scripts for Tab 2
-# $scriptFiles2 = Get-ChildItem -Path $extrascripts -Filter *.ps1 | Sort-Object Name
-# foreach ($scriptFile in $scriptFiles2) {
-#     $checkBox = New-Object System.Windows.Controls.CheckBox
-#     $checkBox.Content = $scriptFile.Name
-#     $checkBox.Margin = 5
-#     $checkBox.IsEnabled = $false
-#     $mainStackPanel2.Children.Add($checkBox)
-# }
+# Load scripts for Tab 2
+$scriptFiles2 = Get-ChildItem -Path $Otherscripts -Filter *.ps1 | Sort-Object Name
+foreach ($scriptFile in $scriptFiles2) {
+    $checkBox = New-Object System.Windows.Controls.CheckBox
+    $checkBox.Content = $scriptFile.Name
+    $checkBox.Margin = 5
+    $mainStackPanel2.Children.Add($checkBox)
+}
 
-# $executeButton2 = New-Object System.Windows.Controls.Button
-# $executeButton2.Content = "Execute"
-# $executeButton2.Margin = 5
-# $executeButton2.IsEnabled = $false
-# $executeButton2.Add_Click({ Execute-Scripts $mainStackPanel2 $extrascripts })
-# $mainStackPanel2.Children.Add($executeButton2)
+$executeButton2 = New-Object System.Windows.Controls.Button
+$executeButton2.Content = "Execute"
+$executeButton2.Margin = 5
+$executeButton2.Add_Click({
+    # Collect only script checkboxes, ignoring the "Select All" checkbox
+    $selectedScripts = $mainStackPanel2.Children | Where-Object {
+        $_ -is [System.Windows.Controls.CheckBox] -and
+        $_.IsChecked -and
+        $_.Content -ne 'Select All'
+    }
+    
+    if ($selectedScripts.Count -gt 0) {
+        $progressData = Show-ProgressForm -title "Executing Scripts" -message "Starting script executions..."
+        $totalScripts = $selectedScripts.Count
+        $currentScriptIndex = 0
+
+        foreach ($selectedScript in $selectedScripts) {
+            $scriptPath = Join-Path -Path $Otherscripts -ChildPath $selectedScript.Content
+            Update-ProgressBar -progressData $progressData -text "Running $($selectedScript.Content)..." -percent (($currentScriptIndex / $totalScripts) * 100)
+            . $scriptPath
+            $currentScriptIndex++
+        }
+
+        Update-ProgressBar -progressData $progressData -text "Scripts execution completed" -percent 100
+        Start-Sleep -Seconds 2
+        $progressData.Form.Close()        
+    }
+})
+
+$mainStackPanel2.Children.Add($executeButton2)
 
 # Adding tabs to TabControl
 $tabControl.Items.Add($tabItem1)
-#$tabControl.Items.Add($tabItem2) #Enable to Enable Tab 2
+$tabControl.Items.Add($tabItem2) #Enable to Enable Tab 2
 
 # Add the TabControl to the main container
 $mainContainer.Children.Add($tabControl)
