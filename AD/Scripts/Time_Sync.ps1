@@ -1,30 +1,35 @@
-# Import necessary modules
-Import-Module ActiveDirectory
+#Import Modules
 Import-Module ImportExcel
+Import-Module ActiveDirectory
 
-# Get the domain DN dynamically
-$domainDN = (Get-ADDomain).DistinguishedName
-
-# Get all Domain Controllers
+# Get all domain controllers in the domain
 $domainControllers = Get-ADDomainController -Filter *
 
-$timeSyncInfo = @()
+# Prepare a variable to store the results
+$results = @()
 
-# Loop through each Domain Controller
-foreach ($dc in $domainControllers) {
-    # Check time synchronization status
-    $timeSyncStatus = w32tm /query /status /computer:$dc.HostName | Select-String "Source"
+# Script block to check NTP settings and collect data
+$scriptBlock = {
+    $dcName = $env:COMPUTERNAME
+    $timeSource = w32tm /query /source
+    $timeStatus = w32tm /query /status
 
-    $timeSyncInfo += [PSCustomObject]@{
-        Domain           = $domainDN
-        NameOfDC         = $dc.HostName
-        IPV4Address      = $dc.IPv4Address
-        TimeSyncSource   = if ($timeSyncStatus) {($timeSyncStatus -split ":")[1].Trim()} else {"Unknown"}
+    # Return an object with properties
+    return [PSCustomObject]@{
+        ComputerName = $dcName
+        TimeSource = $timeSource
+        TimeStatus = $timeStatus -join "`n"  # Join all lines to a single string
     }
+}
+
+# Run the script block on each domain controller and collect results
+foreach ($dc in $domainControllers) {
+    $result = Invoke-Command -ComputerName $dc.HostName -ScriptBlock $scriptBlock
+    $results += $result
 }
 
 
 # Export to Excel
 $excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
-$timeSyncInfo | Export-Excel -Path $excelPath -WorksheetName "Time Sync Status" -AutoSize -TableName "TimeSyncInfo" -TableStyle Medium9 -BoldTopRow -FreezeTopRow -Append
+$results | Select-Object ComputerName, TimeSource, TimeStatus | Export-Excel -Path $excelPath -WorksheetName "Time Sync Status" -AutoSize -TableName "TimeSyncInfo" -TableStyle Medium9 -BoldTopRow -FreezeTopRow -Append
 
