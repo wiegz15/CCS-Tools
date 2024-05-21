@@ -4,8 +4,13 @@ $scriptPath = $PSScriptRoot
 $gitFolderPath = Join-Path $scriptPath "PortableGit"
 $gitExecutablePath = Join-Path $gitFolderPath "cmd\git.exe"
 $gitArchivePath = Join-Path $scriptPath "PortableGit.7z.exe"
-$repositoryUrl = "https://github.com/wiegz15/CCS-Tools"
-$localRepoPath = Join-Path $scriptPath "Repository"
+$repositoryUrl = "https://github.com/wiegz15/CCS-Tools/"
+$localRepoPath = $scriptPath
+
+# Create the folder for Git Portable if it doesn't exist
+if (-Not (Test-Path -Path $gitFolderPath)) {
+    New-Item -ItemType Directory -Path $gitFolderPath
+}
 
 # Download Git Portable if it is not already present
 if (-Not (Test-Path -Path $gitExecutablePath)) {
@@ -23,9 +28,10 @@ if (-Not (Test-Path -Path $gitExecutablePath)) {
 }
 
 # Update the PATH environment variable to include the Git Portable path
+$gitDir = $gitExecutablePath.DirectoryName
 $envPath = [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
-if ($envPath -notlike "*$gitFolderPath*") {
-    $newPath = "$envPath;$gitFolderPath\cmd"
+if ($envPath -notlike "*$gitDir*") {
+    $newPath = "$envPath;$gitDir"
     [System.Environment]::SetEnvironmentVariable("Path", $newPath, [System.EnvironmentVariableTarget]::User)
     Write-Host "Updated PATH environment variable to include Git Portable."
 } else {
@@ -33,15 +39,15 @@ if ($envPath -notlike "*$gitFolderPath*") {
 }
 
 # Use Git Portable to update the repository
-if (-Not (Test-Path -Path $localRepoPath)) {
+if (-Not (Test-Path -Path (Join-Path $localRepoPath ".git"))) {
     # Clone the repository if it doesn't exist locally
     Write-Host "Cloning repository from $repositoryUrl to $localRepoPath..."
-    & "$gitFolderPath\cmd\git.exe" clone $repositoryUrl $localRepoPath
+    & "$gitExecutablePath" clone $repositoryUrl $localRepoPath
 } else {
     # Pull the latest changes if the repository already exists locally
     Write-Host "Updating repository at $localRepoPath..."
     Set-Location -Path $localRepoPath
-    & "$gitFolderPath\cmd\git.exe" pull
+    & "$gitExecutablePath" pull
 }
 
 Write-Host "Git repository is up to date."
