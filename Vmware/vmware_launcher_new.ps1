@@ -361,7 +361,31 @@ $executeButton2 = New-Object System.Windows.Controls.Button
 $executeButton2.Content = "Execute"
 $executeButton2.Margin = 5
 $executeButton2.IsEnabled = $false
-$executeButton2.Add_Click({ Execute-Scripts $mainStackPanel2 $zToolsDir })
+$executeButton2.Add_Click({
+    # Collect only script checkboxes, ignoring the "Select All" checkbox
+    $selectedScripts = $mainStackPanel2.Children | Where-Object {
+        $_ -is [System.Windows.Controls.CheckBox] -and
+        $_.IsChecked -and
+        $_.Content -ne 'Select All'
+    }
+    
+    if ($selectedScripts.Count -gt 0) {
+        $progressData = Show-ProgressForm -title "Executing Scripts" -message "Starting script executions..."
+        $totalScripts = $selectedScripts.Count
+        $currentScriptIndex = 0
+
+        foreach ($selectedScript in $selectedScripts) {
+            $scriptPath = Join-Path -Path $zToolsDir -ChildPath $selectedScript.Content
+            Update-ProgressBar -progressData $progressData -text "Running $($selectedScript.Content)..." -percent (($currentScriptIndex / $totalScripts) * 100)
+            . $scriptPath
+            $currentScriptIndex++
+        }
+
+        Update-ProgressBar -progressData $progressData -text "Scripts execution completed" -percent 100
+        Start-Sleep -Seconds 2
+        $progressData.Form.Close()        
+    }
+})
 $mainStackPanel2.Children.Add($executeButton2)
 
 # Tab 3: "Assessment"
