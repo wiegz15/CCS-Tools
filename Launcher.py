@@ -98,7 +98,24 @@ def run_script(script_path):
     except subprocess.CalledProcessError:
         messagebox.showerror("Error", f"Failed to run {script_path}")
 
-def install_rsat():
+def install_rsat_server():
+    try:
+        subprocess.run([
+            "dism", "/online", "/enable-feature",
+            "/featurename:RSAT",
+            "/featurename:DNS-Server-Tools",
+            "/featurename:RSAT-AD-Tools-Feature",
+            "/featurename:RSAT-ADDS-Tools-Feature",
+            "/featurename:DirectoryServices-DomainController-Tools",
+            "/featurename:DirectoryServices-ADAM-Tools",
+            "/featurename:RSAT-DHCP",
+            "/all"
+        ], check=True)
+        messagebox.showinfo("Info", "RSAT features installed successfully")
+    except subprocess.CalledProcessError:
+        messagebox.showerror("Error", "Failed to install RSAT features")
+
+def install_rsat_win():
     rsat_features = [
         "Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0",
         "Rsat.BitLocker.Recovery.Tools~~~~0.0.1.0",
@@ -150,10 +167,10 @@ def main():
     create_button(frame, 'Install PowerCLI', lambda: install_module('VMware.PowerCLI'), 1, 1)
 
     create_label(frame, f"RSAT (Server): {'Installed' if check_rsat_server_installed() else 'Not Installed'}", 2, 0)
-    create_button(frame, 'Install Features for Servers Only', install_rsat, 3, 0)
+    create_button(frame, 'Install Features for Servers Only', install_rsat_server, 3, 0)
 
     create_label(frame, f"RSAT (Win 10/11): {'Installed' if check_rsat_win_installed() else 'Not Installed'}", 2, 1)
-    create_button(frame, 'Install RSAT for Windows 10/11', install_rsat, 3, 1)
+    create_button(frame, 'Install RSAT for Windows 10/11', install_rsat_win, 3, 1)
 
     if check_module_installed('ImportExcel') and check_module_installed('VMware.PowerCLI') and (check_rsat_server_installed() or check_rsat_win_installed()):
         create_label(frame, "✔ Pre-reqs installed", 4, 0, 'green')

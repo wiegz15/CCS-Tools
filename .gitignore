@@ -5,3 +5,6 @@ AD_Output.xlsx
 VMware_Assessment.xlsx
 /Reports
 /PortableGit
+/build
+CCS-Tools-Launcher.spec
+Launcher.py
