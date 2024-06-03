@@ -33,18 +33,20 @@ foreach ($cluster in $clusters) {
         "Cluster Name" = $cluster.Name
         "Number of ESXi servers" = $num_esxis
         "pCPU" = $ClusterCPUCores
-        "vCPU" = (Get-VM -Location $cluster | Measure-Object NumCpu -Sum).Sum
+        "vCPU" = (Get-VM -Location $cluster | Measure-Object -Property NumCpu -Sum).Sum
         "PoweredOn vCPUs" = $ClusterPoweredOnvCPUs.Sum
+        "PoweredOn VMs" = (Get-VM -Location $cluster | Where-Object { $_.PowerState -eq "PoweredOn" }).Count
         "vCPU:pCPU Ratio" = [Math]::Round($ClusterPoweredOnvCPUs.Sum / $ClusterCPUCores, 3)
         "vCPU:pCPU Ratio with one ESXi failed" = [Math]::Round($ClusterPoweredOnvCPUs.Sum / $TotalCoresPerClusterMinusOne, 3)
         "CPU Overcommit (%)" = [Math]::Round(100 * ($ClusterPoweredOnvCPUs.Sum / $ClusterCPUCores), 3)
-        'pRAM(GB)' = $ClusterPhysRAM
-        'vRAM(GB)' = [Math]::Round((Get-VM -Location $cluster | Measure-Object MemoryGB -Sum).Sum, 2)
-        'PoweredOn vRAM (GB)' = $ClusterPoweredOnvRAM.Sum
-        'vRAM:pRAM Ratio' = [Math]::Round($ClusterPoweredOnvRAM.Sum / $ClusterPhysRAM, 3)
+        "pRAM(GB)" = $ClusterPhysRAM
+        "vRAM(GB)" = [Math]::Round((Get-VM -Location $cluster | Measure-Object -Property MemoryGB -Sum).Sum, 2)
+        "PoweredOn vRAM (GB)" = $ClusterPoweredOnvRAM.Sum
+        "vRAM:pRAM Ratio" = [Math]::Round($ClusterPoweredOnvRAM.Sum / $ClusterPhysRAM, 3)
         "vRAM:pRAM Ratio with one ESXi failed" = [Math]::Round($ClusterPoweredOnvRAM.Sum / $TotalRAMPerClusterMinusOne, 3)
-        'RAM Overcommit (%)' = [Math]::Round(100 * ($ClusterPoweredOnvRAM.Sum / $ClusterPhysRAM), 2)
+        "RAM Overcommit (%)" = [Math]::Round(100 * ($ClusterPoweredOnvRAM.Sum / $ClusterPhysRAM), 2)
     }
+    
 
     # Add the cluster data to the array
     $clusterData += New-Object -TypeName psobject -Property $clusterProperty
@@ -56,8 +58,8 @@ foreach ($cluster in $clusters) {
         $hostModel = $hostView.Hardware.SystemInfo.Model
         $cpuCores = $hostView.Hardware.CpuInfo.NumCpuCores
         $ram = [Math]::Round($hostView.Hardware.MemorySize / 1GB, 2)
-        $vmCount = (Get-VM -Location $vmHost).Count
-        
+        $TotalvmCount = (Get-VM -Location $vmHost).Count
+
         # Get firmware version
         $firmwareVersion = $hostView.Hardware.BiosInfo.BiosVersion
 
@@ -67,7 +69,7 @@ foreach ($cluster in $clusters) {
             Model = $hostModel
             CPUCores = $cpuCores
             RAMGB = $ram
-            VMCount = $vmCount
+            VMCount = $TotalvmCount
             FirmwareVersion = $firmwareVersion
         }
     }
@@ -80,3 +82,4 @@ $clusterData | Export-Excel -Path $excelPath -WorksheetName "Cluster Summary" -A
 # Export the host data to the second sheet in the Excel file
 $hostData | Export-Excel -Path $excelPath -WorksheetName "Host Summary" -AutoSize -TableName "HostSummary" -Append
 
+##$results | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "hostservices"

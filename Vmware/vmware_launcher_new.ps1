@@ -457,17 +457,6 @@ $executeButton3.Add_Click({
         [System.Windows.Forms.MessageBox]::Show("Scripts execution completed", "Execution Complete")
         
     }
-
-    # Prompt user to open the Output.xlsx file
-    $openResponse = [System.Windows.Forms.MessageBox]::Show("Do you want to open the VMware_Assessment.xlsx file now?", "Open File?", [System.Windows.Forms.MessageBoxButtons]::YesNo)
-    if ($openResponse -eq [System.Windows.Forms.DialogResult]::Yes) {
-        $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Assessment.xlsx"
-        if (Test-Path $excelPath) {
-            Start-Process $excelPath  # Opens the file with the default application associated with .xlsx files
-        } else {
-            [System.Windows.Forms.MessageBox]::Show("VMware_Assessment.xlsx file not found.", "File Not Found")
-        }
-    }
 })
 
 $mainStackPanel3.Children.Add($executeButton3)
