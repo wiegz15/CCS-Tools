@@ -33,10 +33,16 @@ def create_label(frame, text, row, column, color='black'):
 
 def install_module(module_name):
     try:
-        subprocess.run(["powershell", "-Command", f"Install-Module -Name {module_name} -Force"], check=True)
-        messagebox.showinfo("Info", f"{module_name} installed successfully")
-    except subprocess.CalledProcessError:
-        messagebox.showerror("Error", f"Failed to install {module_name}")
+        result = subprocess.run(
+            ["powershell", "-Command", f"Install-Module -Name {module_name} -Force -Scope CurrentUser"],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            messagebox.showinfo("Info", f"{module_name} installed successfully\n{result.stdout}")
+        else:
+            messagebox.showerror("Error", f"Failed to install {module_name}\n{result.stderr}")
+    except subprocess.CalledProcessError as e:
+        messagebox.showerror("Error", f"Failed to install {module_name}: {str(e)}")
 
 def check_module_installed(module_name):
     try:
