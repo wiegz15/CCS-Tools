@@ -52,6 +52,9 @@ def center_popup(popup, root):
     popup.geometry(f'{width}x{height}+{x}+{y}')
 
 def check_tools_status():
+    for widget in status_frame.winfo_children():
+        widget.destroy()
+
     popup = tk.Toplevel()
     popup.title("Checking Tool Status")
     label = tk.Label(popup, text="Checking Tool Status. Please wait...")
@@ -65,10 +68,7 @@ def check_tools_status():
         result = subprocess.run(["powershell", "-ExecutionPolicy", "Bypass", "-File", script_path], check=True, capture_output=True, text=True)
         status_lines = result.stdout.strip().split('\n')
         for line in status_lines:
-            if "Not Installed" in line:
-                color = "red"
-            elif "Installed" in line:
-                color = "green"
+            color = "red" if "Not Installed" in line else "green" if "Installed" in line else "black"
             status_label = tk.Label(status_frame, text=line, fg=color)
             status_label.pack(anchor='w')
     except subprocess.CalledProcessError as e:
@@ -111,7 +111,14 @@ def main():
     status_container = tk.Frame(root)
     status_container.pack(padx=10, pady=10, fill='both', expand=True)
 
-    create_label(status_container, 'Tools Status:', 0, 0, color='blue')
+    label_frame = tk.Frame(status_container)
+    label_frame.grid(row=0, column=0, sticky='w')
+    create_label(label_frame, 'Tools Status:', 0, 0, color='blue')
+
+    refresh_icon = tk.PhotoImage(file=os.path.join(os.getcwd(), "Update","refresh_icon.png"))  # Ensure you have the icon file in the correct path
+    refresh_button = tk.Button(label_frame, image=refresh_icon, command=check_tools_status)
+    refresh_button.grid(row=0, column=1, padx=5)
+
     status_frame = tk.Frame(status_container)
     status_frame.grid(row=1, column=0, sticky='nsew')
 
