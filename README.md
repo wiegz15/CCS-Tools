@@ -12,10 +12,39 @@ CCS Tools Launcher is a Python-based application that provides a graphical user 
 
 ## Requirements
 
-- Python 3.x
-- Tkinter library (usually included with Python)
+- Domain Administrator rights.
+- VCenter Admin rights.
 - PowerShell
-- Required PowerShell scripts in `Update`, `AD`, and `Vmware` folders.
+- You may need to fix powershell Execution Policy for now if it fails to run the Powershell Scripts.
+- Required PowerShell scripts in `Update`, `AD`, and `Vmware` folders. (These will update with the 'Update Tools' button.)
+  -NOTE: The Powershell Install-Module part can take some time depending ont he device.
+
+## Usage
+
+When you run the CCS Tools Launcher EXE, it will automatically create the necessary folders it needs to run.
+
+### Steps:
+
+1. **Run the EXE:**
+
+   - Launch the CCS Tools Launcher executable file. It is recommended you run this in its own folder and not right on the Desktop or in Documents.
+
+2. **Update Tools:**
+
+   - Click the **Update Tools** button in the GUI.
+   - This will download a portable version of Git and check the repository for updated scripts in the `AD` and `Vmware` folders. The Portable Git download only needs to happen the first time.
+
+3. **Using the Toolsets:**
+   - **VMware Toolset:** Click the **VMware Toolset** button to run the `vmware_launcher_new.ps1` script.
+   - **AD Toolset:** Click the **AD Toolset** button to run the `AD_launcher.ps1` script.
+   - **Install PS Modules:** Click the **Install PS Modules** button to check and update PowerShell modules by running the `Install Modules.ps1` script.
+   - **Install RSAT Tools:** Click the **Install RSAT Tools** button to install RSAT tools by running the `Install RSAT Tools.ps1` script.
+
+### Tools Status:
+
+The Tools Status section displays the status of installed tools, indicating whether they are installed or not.
+
+By following these steps, you can ensure that your toolsets are up-to-date and ready to use.
 
 ## GUI Components
 
