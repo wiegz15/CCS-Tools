@@ -1,28 +1,45 @@
-Import-Module ActiveDirectory
-Import-Module ImportExcel
-
-# Get all Domain Controllers
-$domainControllers = Get-ADDomainController -Filter *
-
-$replicationTimes = @()
-
-# Loop through each Domain Controller
-foreach ($dc in $domainControllers) {
-    $dcName = $dc.HostName
-
-    # Get Replication Times
-    $replicationStatus = Get-ADReplicationPartnerMetadata -Target $dcName -Scope Server
-    foreach ($status in $replicationStatus) {
-        $replicationTimes += [PSCustomObject]@{
-            DCName                  = $dcName
-            Partner                 = $status.PartnerServer
-            LastReplicationAttempt  = $status.LastReplicationAttempt
-            LastReplicationSuccess  = $status.LastReplicationSuccess
-            LastReplicationResult   = $status.LastReplicationResult
-        }
+$myRepInfo = @(repadmin /replsum * /bysrc /bydest /sort:delta)
+ 
+# Initialize our array.
+$cleanRepInfo = @()
+# Start @ #10 because all the previous lines are junk formatting
+# and strip off the last 4 lines because they are not needed.
+for ($i=10; $i -lt ($myRepInfo.Count-4); $i++) {
+    if ($myRepInfo[$i] -ne "") {
+        # Remove empty lines from our array.
+        $myRepInfo[$i] -replace '\s+', " "
+        $cleanRepInfo += $myRepInfo[$i]
     }
 }
 
-# Export to Excel
+$finalRepInfo = @()
+foreach ($line in $cleanRepInfo) {
+    $splitRepInfo = $line -split '\s+', 8
+    if ($splitRepInfo[0] -eq "Source") { $repType = "Source" }
+    if ($splitRepInfo[0] -eq "Destination") { $repType = "Destination" }
+
+    if ($splitRepInfo[1] -notmatch "DSA") {
+        # Create an Object and populate it with our values.
+        $objRepValues = New-Object PSObject -Property @{
+            DSAType  = $repType      # Source or Destination DSA
+            Hostname = $splitRepInfo[1] # Hostname
+            Delta    = $splitRepInfo[2] # Largest Delta
+            Fails    = $splitRepInfo[3] # Failures
+            Total    = $splitRepInfo[5] # Totals
+            'Error%' = $splitRepInfo[6] # % errors  
+            ErrorMsg = $splitRepInfo[7] # Error code
+        }
+
+        # Add the Object as a row to our array   
+        $finalRepInfo += $objRepValues
+    }
+}
+
+# Convert array to a DataTable
+# $dataTable = ConvertTo-DataTable -array $finalRepInfo
+
+# Define the Excel file path
 $excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
-$replicationTimes | Export-Excel -Path $excelPath -WorksheetName "Replication Times" -AutoSize -TableName "ReplicationTimes" -TableStyle Medium14 -Append
+
+# Export DataTable to Excel using ImportExcel module
+$finalRepInfo | Export-Excel -Path $excelPath -WorkSheetname "ReplicationReport" -AutoSize -TableName "ReplicationReport" -TableStyle Medium14 -Append

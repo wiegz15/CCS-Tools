@@ -1,4 +1,4 @@
-# Import necessary modules and assemblies for UI and VMware management
+# Import necessary modules and assemblies for UI and management
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName Microsoft.VisualBasic
@@ -56,12 +56,6 @@ $ExchangeSCriptsDir = Join-Path -Path $adScriptsDir -ChildPath "ExchangeScripts"
 if (-not (Test-Path $reportsDir)) {
     New-Item -Path $reportsDir -ItemType Directory
 }
-
-# # Ensure the VMware directory exists
-# if (-not (Test-Path $extrascripts)) {
-#     New-Item -Path $extrascripts -ItemType Directory
-#     [System.Windows.Forms.MessageBox]::Show("Extra directory not found. A new Extra directory has been created.", "Directory Created")
-# }
 
 # Ensure the EXTRA Scripts directory exists
 if (-not (Test-Path $adScriptsDir)) {
