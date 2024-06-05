@@ -1,49 +1,46 @@
-# VMware and Active Directory Management Tool
+# CCS Tools Launcher
 
-## Overview
-This PowerShell script creates a graphical user interface (GUI) for managing VMware and Active Directory tasks. It provides a robust suite of tools for IT administrators to manage virtual environments and directory services efficiently. The GUI simplifies the process of connecting to vCenter, executing scripts, and managing reports.
+CCS Tools Launcher is a Python-based application that provides a graphical user interface (GUI) for running various PowerShell scripts related to VMware, Active Directory, and other tools. It ensures that the required scripts are executed with administrative privileges and checks the status of installed tools.
 
 ## Features
 
-### Environment Setup and Validation
-- Validates and creates necessary directories for scripts and reports.
-- Checks for and potentially creates a configuration file (`tools.ini`) to store and retrieve vCenter server information.
+- **Run as Admin:** Ensures the application runs with administrative privileges.
+- **Extract Required Folders:** Extracts the necessary folders for running scripts.
+- **Run PowerShell Scripts:** Provides buttons to run specific PowerShell scripts for different toolsets.
+- **Check Tools Status:** Displays the status of installed tools and modules.
+- **Tooltips:** Provides tooltips for buttons to explain their functionality.
 
-### User Interaction
-- Uses Windows Forms and Presentation Framework for a responsive GUI experience.
-- Allows users to input the vCenter server name if not previously configured.
+## Requirements
 
-### Connectivity
-- Connects to vCenter using specified credentials, handling both successful connections and errors.
-- Displays connection status dynamically within the GUI.
+- Python 3.x
+- Tkinter library (usually included with Python)
+- PowerShell
+- Required PowerShell scripts in `Update`, `AD`, and `Vmware` folders.
 
-### Script Execution
-- Provides a structured interface to execute multiple scripts related to VMware and Active Directory.
-- Includes "Select All" functionality for batch operations.
-- Displays progress through a progress bar during script executions.
+## GUI Components
 
-### Report Handling
-- Facilitates opening and resetting report files directly from the GUI.
+### Buttons
 
-### Extensibility
-- The script is designed to be easily extendable for additional scripts and functionalities.
+- **VMware Toolset:** Launches the VMware Toolset by running the `vmware_launcher_new.ps1` script.
+- **AD Toolset:** Launches the Active Directory Toolset by running the `AD_launcher.ps1` script.
+- **Update Tools:** Checks and updates tools by running the `Update Tools.ps1` script.
+- **Install PS Modules:** Checks and updates PowerShell modules by running the `Install Modules.ps1` script.
+- **Install RSAT Tools:** Installs RSAT tools by running the `Install RSAT Tools.ps1` script.
 
-## Getting Started
+### Tools Status
 
-### Prerequisites
-- PowerShell 5.1 or higher.
-- VMware PowerCLI module installed.  (Provides an option to install)
-- ImportExcel module installed. (Provides an option to install)
-- Proper permissions to connect to vCenter and execute scripts.
+Displays the status of installed tools, indicating whether they are installed or not.
 
-### Installation
-1. Download the script files to your local machine.
-2. Ensure all script paths and dependencies are correctly set up in the script.
+## Code Overview
 
-### Usage
-Run the script in PowerShell. The GUI will appear with various controls:
-- **Connect to vCenter**: Connect to your vCenter server using credentials.
-- **Execute**: Run selected scripts from the available list.
-- **Open Report**: View generated reports.
-- **Exit**: Properly disconnect and close the application.
+### Main Functions
 
+- **is_admin:** Checks if the application is running with administrative privileges.
+- **run_as_admin:** Restarts the application with administrative privileges if not already running as admin.
+- **extract_folder:** Extracts the specified folder to the current working directory.
+- **create_button:** Creates a button in the GUI.
+- **create_label:** Creates a label in the GUI.
+- **run_script:** Runs the specified PowerShell script and displays the output or error.
+- **center_popup:** Centers a popup window on the screen.
+- **check_tools_status:** Checks the status of installed tools by running the `ToolsStatus.ps1` script.
+- **create_tooltip:** Creates a tooltip for a widget.
