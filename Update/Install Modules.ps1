@@ -10,6 +10,24 @@ function Is-ModuleInstalled {
     return $module -ne $null
 }
 
+# Function to check and install the latest NuGet provider
+function Ensure-NuGetProvider {
+    if (-not (Get-PackageProvider -ListAvailable -Name NuGet)) {
+        Write-Host "NuGet provider not found. Installing..."
+        Install-PackageProvider -Name NuGet -Force -Scope CurrentUser -ErrorAction Stop
+    } else {
+        Write-Host "NuGet provider is already installed."
+    }
+}
+
+try {
+    Ensure-NuGetProvider
+    Write-Host "NuGet provider installed or already present."
+} catch {
+    Write-Error "Failed to install NuGet provider. Error details: $_"
+    exit
+}
+
 foreach ($module in $modules) {
     if (-not (Is-ModuleInstalled -ModuleName $module)) {
         try {
