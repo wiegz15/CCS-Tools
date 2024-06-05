@@ -102,7 +102,7 @@ def main():
     global root
     root = tk.Tk()
     root.title('CCS Tools Launcher')
-    root.geometry('420x450')
+    root.geometry('410x460')
 
     frame = tk.Frame(root)
     frame.pack(padx=10, pady=10, fill='both', expand=True)
@@ -129,8 +129,9 @@ def main():
 
     create_button(frame, 'VMware Toolset', lambda: run_script(os.path.join(vmware_path, "vmware_launcher_new.ps1")), 5, 0, "Launch VMware Toolset")
     create_button(frame, 'AD Toolset', lambda: run_script(os.path.join(ad_path, "AD_launcher.ps1")), 5, 1, "Launch Active Directory Toolset")
-    create_button(frame, 'Install PS Modules', lambda: run_script(os.path.join(update_path, "Install Modules.ps1")), 7, 0, "Check and Update PowerShell Modules")
-    create_button(frame, 'Install RSAT Tools', lambda: run_script(os.path.join(rsat_path, "Install RSAT Tools.ps1")), 7, 1, "Install RSAT Tools")
+    create_button(frame, 'Update Tools', lambda: run_script(os.path.join(update_path, "Update Tools.ps1")), 6, 0, "Check and Update Tools")
+    create_button(frame, 'Install PS Modules', lambda: run_script(os.path.join(update_path, "Install Modules.ps1")), 8, 0, "Check and Update PowerShell Modules")
+    create_button(frame, 'Install RSAT Tools', lambda: run_script(os.path.join(rsat_path, "Install RSAT Tools.ps1")), 8, 1, "Install RSAT Tools")
 
     check_tools_status()
 
