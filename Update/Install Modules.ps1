@@ -14,7 +14,7 @@ function Is-ModuleInstalled {
 function Ensure-NuGetProvider {
     if (-not (Get-PackageProvider -ListAvailable -Name NuGet)) {
         Write-Host "NuGet provider not found. Installing..."
-        Install-PackageProvider -Name NuGet -Force -Scope CurrentUser -ErrorAction Stop
+        Install-PackageProvider -Name NuGet -Force -ErrorAction Stop
     } else {
         Write-Host "NuGet provider is already installed."
     }
@@ -32,7 +32,7 @@ foreach ($module in $modules) {
     if (-not (Is-ModuleInstalled -ModuleName $module)) {
         try {
             # Attempt to install the module
-            Install-Module -Name $module -Force -Scope CurrentUser
+            Install-Module -Name $module -Force -AllowClobber
             Write-Host "Module '$module' installed successfully."
         } catch {
             Write-Error "Failed to install module '$module'. Error details: $_"
