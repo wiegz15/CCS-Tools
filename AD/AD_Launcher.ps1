@@ -49,7 +49,8 @@ $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $parentDirectory = Split-Path -Parent $scriptDirectory
 $reportsDir = Join-Path -Path $parentDirectory -ChildPath "Reports"
 $adScriptsDir = Join-Path -Path $scriptDirectory -ChildPath "Scripts"
-$Otherscripts = Join-Path -Path $adScriptsDir -ChildPath "Other"
+$Otherscripts = Join-Path -Path $adScriptsDir -ChildPath "WorkinProgress"
+$ExchangeSCriptsDir = Join-Path -Path $adScriptsDir -ChildPath "ExchangeScripts"
 
 # Ensure the Reports directory exists
 if (-not (Test-Path $reportsDir)) {
@@ -216,7 +217,7 @@ $mainStackPanel1.Children.Add($resetButton)
 
 # Tab 2: Other Reports
 $tabItem2 = New-Object System.Windows.Controls.TabItem
-$tabItem2.Header = "Other"
+$tabItem2.Header = "WIP"
 $scrollViewer2 = New-Object System.Windows.Controls.ScrollViewer
 $scrollViewer2.VerticalScrollBarVisibility = "Auto"
 $scrollViewer2.HorizontalAlignment = "Stretch"
@@ -282,9 +283,80 @@ $executeButton2.Add_Click({
 
 $mainStackPanel2.Children.Add($executeButton2)
 
+# Tab 3: Other Reports
+$tabItem3 = New-Object System.Windows.Controls.TabItem
+$tabItem3.Header = "Exchange"
+$scrollViewer3 = New-Object System.Windows.Controls.ScrollViewer
+$scrollViewer3.VerticalScrollBarVisibility = "Auto"
+$scrollViewer3.HorizontalAlignment = "Stretch"
+$scrollViewer3.VerticalAlignment = "Stretch"
+$scrollViewer3.Margin = 10
+$mainStackPanel3 = New-Object System.Windows.Controls.StackPanel
+$scrollViewer3.Content = $mainStackPanel3
+$tabItem3.Content = $scrollViewer3
+
+# "Select All" Checkbox
+$selectAllCheckbox = New-Object System.Windows.Controls.CheckBox
+$selectAllCheckbox.Content = "Select All"
+$selectAllCheckbox.Margin = 10
+$selectAllCheckbox.Add_Checked({
+    $mainStackPanel3.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] -and $_ -ne $selectAllCheckbox } | ForEach-Object {
+        $_.IsChecked = $true
+    }
+})
+$selectAllCheckbox.Add_Unchecked({
+    $mainStackPanel3.Children | Where-Object { $_ -is [System.Windows.Controls.CheckBox] -and $_ -ne $selectAllCheckbox } | ForEach-Object {
+        $_.IsChecked = $false
+    }
+})
+$mainStackPanel3.Children.Add($selectAllCheckbox)
+
+# Load scripts for Tab 3
+$scriptFiles3 = Get-ChildItem -Path $ExchangeSCriptsDir -Filter *.ps1 | Sort-Object Name
+foreach ($scriptFile in $scriptFiles3) {
+    $checkBox = New-Object System.Windows.Controls.CheckBox
+    $checkBox.Content = $scriptFile.Name
+    $checkBox.Margin = 5
+    $mainStackPanel3.Children.Add($checkBox)
+}
+
+$executeButton3 = New-Object System.Windows.Controls.Button
+$executeButton3.Content = "Execute"
+$executeButton3.Margin = 5
+$executeButton3.Add_Click({
+    # Collect only script checkboxes, ignoring the "Select All" checkbox
+    $selectedScripts = $mainStackPanel3.Children | Where-Object {
+        $_ -is [System.Windows.Controls.CheckBox] -and
+        $_.IsChecked -and
+        $_.Content -ne 'Select All'
+    }
+    
+    if ($selectedScripts.Count -gt 0) {
+        $progressData = Show-ProgressForm -title "Executing Scripts" -message "Starting script executions..."
+        $totalScripts = $selectedScripts.Count
+        $currentScriptIndex = 0
+
+        foreach ($selectedScript in $selectedScripts) {
+            $scriptPath = Join-Path -Path $Otherscripts -ChildPath $selectedScript.Content
+            Update-ProgressBar -progressData $progressData -text "Running $($selectedScript.Content)..." -percent (($currentScriptIndex / $totalScripts) * 100)
+            . $scriptPath
+            $currentScriptIndex++
+        }
+
+        Update-ProgressBar -progressData $progressData -text "Scripts execution completed" -percent 100
+        Start-Sleep -Seconds 2
+        $progressData.Form.Close()        
+    }
+})
+
+$mainStackPanel3.Children.Add($executeButton3)
+
+
+
 # Adding tabs to TabControl
 $tabControl.Items.Add($tabItem1)
-$tabControl.Items.Add($tabItem2) #Enable to Enable Tab 2
+$tabControl.Items.Add($tabItem2)
+$tabControl.Items.Add($tabItem3)
 
 # Add the TabControl to the main container
 $mainContainer.Children.Add($tabControl)
