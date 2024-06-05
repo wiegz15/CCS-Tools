@@ -4,6 +4,7 @@ import subprocess
 import sys
 import os
 import ctypes
+import shutil
 
 def is_admin():
     try:
@@ -20,6 +21,18 @@ def run_as_admin():
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run as admin: {str(e)}")
         sys.exit()
+
+def extract_folder(folder_name):
+    if getattr(sys, 'frozen', False):
+        # If running as a bundled executable
+        folder_src = os.path.join(sys._MEIPASS, folder_name)
+    else:
+        # If running as a script
+        folder_src = os.path.join(os.path.dirname(os.path.abspath(__file__)), folder_name)
+    
+    folder_dst = os.path.join(os.getcwd(), folder_name)
+    if not os.path.exists(folder_dst):
+        shutil.copytree(folder_src, folder_dst)
 
 def create_button(frame, text, command, row, column, tooltip=None):
     button = tk.Button(frame, text=text, command=command)
@@ -98,6 +111,9 @@ def create_tooltip(widget, text):
 
 def main():
     run_as_admin()
+    extract_folder('Update')
+    extract_folder('AD')
+    extract_folder('Vmware')
 
     global root
     root = tk.Tk()
