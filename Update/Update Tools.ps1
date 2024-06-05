@@ -5,7 +5,7 @@ $gitPortablePath = "$scriptPath\GitPortable"
 
 # Define repository URL and local repository path
 $repositoryUrl = "https://github.com/wiegz15/CCS-Tools"
-$localRepoPath = "$($scriptPath)\..\YourLocalRepo" -replace "\\", "/"
+$localRepoPath = "$($scriptPath)\..\" -replace "\\", "/"
 
 # Paths for AD and VMware folders
 $adFolderPath = "$localRepoPath\AD"

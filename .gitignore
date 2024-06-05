@@ -12,3 +12,5 @@ Launcher.spec
 /dist
 /OLD
 /ExeBuild
+PortableGit.7z.Exe
+/Update/GitPortable
