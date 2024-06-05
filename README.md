@@ -16,7 +16,7 @@ CCS Tools Launcher is a Python-based application that provides a graphical user 
 - VCenter Admin rights.
 - PowerShell
 - You may need to fix powershell Execution Policy for now if it fails to run the Powershell Scripts.
-- Required PowerShell scripts in `Update`, `AD`, and `Vmware` folders. (These will update with the 'Update Tools' button.)
+- Required PowerShell scripts in `Update`, `AD`, and `Vmware` folders. (These will update with the `Update Tools` button.)
   -NOTE: The Powershell Install-Module part can take some time depending on the device.
 
 ## Usage
