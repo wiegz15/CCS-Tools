@@ -1,4 +1,4 @@
-$featuresToInstall = 'RSAT-Role-Tools', 'RSAT-AD-Tools', 'RSAT-AD-PowerShell', 'RSAT-ADDS', 'RSAT-ADDS-Tools', 'RSAT-ADLDS', 'RSAT-RDS-Tools', 'RSAT-DNS-Server'
+$featuresToInstall = 'RSAT-Role-Tools', 'RSAT-AD-Tools', 'RSAT-AD-PowerShell', 'RSAT-ADDS', 'RSAT-ADDS-Tools', 'RSAT-ADLDS', 'RSAT-RDS-Tools', 'RSAT-DNS-Server', 'GPMC'
 
 $installedFeatures = Get-WindowsFeature | Where-Object {$_.Installed -eq $true} | Select-Object -ExpandProperty Name
 

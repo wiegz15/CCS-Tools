@@ -142,6 +142,7 @@ foreach ($scriptFile in $scriptFiles1) {
 $executeButton1 = New-Object System.Windows.Controls.Button
 $executeButton1.Content = "Execute"
 $executeButton1.Margin = 5
+# Updated Execute button click event for Tab 1: AD Health
 $executeButton1.Add_Click({
     # Collect only script checkboxes, ignoring the "Select All" checkbox
     $selectedScripts = $mainStackPanel1.Children | Where-Object {
@@ -155,29 +156,24 @@ $executeButton1.Add_Click({
         $totalScripts = $selectedScripts.Count
         $currentScriptIndex = 0
 
+        $scriptCommands = "`$reportsDir = `"$reportsDir`";"
+
         foreach ($selectedScript in $selectedScripts) {
             $scriptPath = Join-Path -Path $adScriptsDir -ChildPath $selectedScript.Content
-            Update-ProgressBar -progressData $progressData -text "Running $($selectedScript.Content)..." -percent (($currentScriptIndex / $totalScripts) * 100)
-            . $scriptPath
+            $scriptCommands += "& `"$scriptPath`"; "
+            Update-ProgressBar -progressData $progressData -text "Adding $($selectedScript.Content) to batch..." -percent (($currentScriptIndex / $totalScripts) * 100)
             $currentScriptIndex++
         }
 
-        Update-ProgressBar -progressData $progressData -text "Scripts execution completed" -percent 100
-        Start-Sleep -Seconds 2
-        $progressData.Form.Close()
-        [System.Windows.Forms.MessageBox]::Show("Scripts execution completed", "Execution Complete")
-        
-    }
+        $tempScriptPath = Join-Path -Path $env:TEMP -ChildPath "BatchScript.ps1"
+        Set-Content -Path $tempScriptPath -Value $scriptCommands
 
-    # Prompt user to open the Output.xlsx file
-    $openResponse = [System.Windows.Forms.MessageBox]::Show("Do you want to open the AD_Output.xlsx file now?", "Open File?", [System.Windows.Forms.MessageBoxButtons]::YesNo)
-    if ($openResponse -eq [System.Windows.Forms.DialogResult]::Yes) {
-        $excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
-        if (Test-Path $excelPath) {
-            Start-Process $excelPath  # Opens the file with the default application associated with .xlsx files
-        } else {
-            [System.Windows.Forms.MessageBox]::Show("AD_Output.xlsx file not found.", "File Not Found")
-        }
+        Update-ProgressBar -progressData $progressData -text "Running all selected scripts in a new window..." -percent 100
+        Start-Sleep -Seconds 1
+        $progressData.Form.Close()
+
+        # Open a new PowerShell window to run the combined script
+        Start-Process powershell.exe -ArgumentList "-NoExit -File `"$tempScriptPath`""
     }
 })
 
@@ -185,29 +181,16 @@ $mainStackPanel1.Children.Add($executeButton1)
 
 # Open Report button
 $openReportButton = New-Object System.Windows.Controls.Button
-$openReportButton.Content = "Open Report"
+$openReportButton.Content = "Open Report Folder"
 $openReportButton.Margin = 5
 $openReportButton.Add_Click({
-    if (Test-Path $excelPath) {
-        Start-Process $excelPath  # Opens the file with the default application associated with .xlsx files
+    if (Test-Path $reportsDir) {
+        Start-Process explorer.exe -ArgumentList "`"$reportsDir`""  # Opens the folder containing the report file
     } else {
-        [System.Windows.Forms.MessageBox]::Show("AD_Output.xlsx file not found.", "File Not Found")
+        [System.Windows.Forms.MessageBox]::Show("Reports directory not found.", "Directory Not Found")
     }
 })
 $mainStackPanel1.Children.Add($openReportButton)
-
-# Reset button to delete the Output.xlsx file
-$resetButton = New-Object System.Windows.Controls.Button
-$resetButton.Content = "Reset"
-$resetButton.Margin = 5
-$resetButton.Add_Click({
-    if (Test-Path $excelPath) {
-        Remove-Item $excelPath -Force
-    } else {
-        [System.Windows.Forms.MessageBox]::Show("AD_Output.xlsx file found and cleared.", "File Not Found")
-    }
-})
-$mainStackPanel1.Children.Add($resetButton)
 
 # Tab 2: Other Reports
 $tabItem2 = New-Object System.Windows.Controls.TabItem
@@ -262,20 +245,40 @@ $executeButton2.Add_Click({
         $totalScripts = $selectedScripts.Count
         $currentScriptIndex = 0
 
+        $scriptCommands = "`$reportsDir = `"$reportsDir`";"
+
         foreach ($selectedScript in $selectedScripts) {
             $scriptPath = Join-Path -Path $Otherscripts -ChildPath $selectedScript.Content
-            Update-ProgressBar -progressData $progressData -text "Running $($selectedScript.Content)..." -percent (($currentScriptIndex / $totalScripts) * 100)
-            . $scriptPath
+            $scriptCommands += "& `"$scriptPath`"; "
+            Update-ProgressBar -progressData $progressData -text "Adding $($selectedScript.Content) to batch..." -percent (($currentScriptIndex / $totalScripts) * 100)
             $currentScriptIndex++
         }
 
-        Update-ProgressBar -progressData $progressData -text "Scripts execution completed" -percent 100
-        Start-Sleep -Seconds 2
-        $progressData.Form.Close()        
+        $tempScriptPath = Join-Path -Path $env:TEMP -ChildPath "BatchScript.ps1"
+        Set-Content -Path $tempScriptPath -Value $scriptCommands
+
+        Update-ProgressBar -progressData $progressData -text "Running all selected scripts in a new window..." -percent 100
+        Start-Sleep -Seconds 1
+        $progressData.Form.Close()
+
+        # Open a new PowerShell window to run the combined script
+        Start-Process powershell.exe -ArgumentList "-NoExit -File `"$tempScriptPath`""
     }
 })
 
 $mainStackPanel2.Children.Add($executeButton2)
+
+$openReportButton2 = New-Object System.Windows.Controls.Button
+$openReportButton2.Content = "Open Report Folder"
+$openReportButton2.Margin = 5
+$openReportButton2.Add_Click({
+    if (Test-Path $reportsDir) {
+        Start-Process explorer.exe -ArgumentList "`"$reportsDir`""  # Opens the folder containing the report file
+    } else {
+        [System.Windows.Forms.MessageBox]::Show("Reports directory not found.", "Directory Not Found")
+    }
+})
+$mainStackPanel2.Children.Add($openReportButton2)
 
 # Tab 3: Other Reports
 $tabItem3 = New-Object System.Windows.Controls.TabItem
@@ -330,20 +333,40 @@ $executeButton3.Add_Click({
         $totalScripts = $selectedScripts.Count
         $currentScriptIndex = 0
 
+        $scriptCommands = "`$reportsDir = `"$reportsDir`";"
+
         foreach ($selectedScript in $selectedScripts) {
-            $scriptPath = Join-Path -Path $Otherscripts -ChildPath $selectedScript.Content
-            Update-ProgressBar -progressData $progressData -text "Running $($selectedScript.Content)..." -percent (($currentScriptIndex / $totalScripts) * 100)
-            . $scriptPath
+            $scriptPath = Join-Path -Path $ExchangeSCriptsDir -ChildPath $selectedScript.Content
+            $scriptCommands += "& `"$scriptPath`"; "
+            Update-ProgressBar -progressData $progressData -text "Adding $($selectedScript.Content) to batch..." -percent (($currentScriptIndex / $totalScripts) * 100)
             $currentScriptIndex++
         }
 
-        Update-ProgressBar -progressData $progressData -text "Scripts execution completed" -percent 100
-        Start-Sleep -Seconds 2
-        $progressData.Form.Close()        
+        $tempScriptPath = Join-Path -Path $env:TEMP -ChildPath "BatchScript.ps1"
+        Set-Content -Path $tempScriptPath -Value $scriptCommands
+
+        Update-ProgressBar -progressData $progressData -text "Running all selected scripts in a new window..." -percent 100
+        Start-Sleep -Seconds 1
+        $progressData.Form.Close()
+
+        # Open a new PowerShell window to run the combined script
+        Start-Process powershell.exe -ArgumentList "-NoExit -File `"$tempScriptPath`""
     }
 })
 
 $mainStackPanel3.Children.Add($executeButton3)
+
+$openReportButton3 = New-Object System.Windows.Controls.Button
+$openReportButton3.Content = "Open Report Folder"
+$openReportButton3.Margin = 5
+$openReportButton3.Add_Click({
+    if (Test-Path $reportsDir) {
+        Start-Process explorer.exe -ArgumentList "`"$reportsDir`""  # Opens the folder containing the report file
+    } else {
+        [System.Windows.Forms.MessageBox]::Show("Reports directory not found.", "Directory Not Found")
+    }
+})
+$mainStackPanel3.Children.Add($openReportButton3)
 
 
 
@@ -354,6 +377,81 @@ $tabControl.Items.Add($tabItem3)
 
 # Add the TabControl to the main container
 $mainContainer.Children.Add($tabControl)
+
+# ClearReports button to delete the Output.xlsx file
+$ClearReports = New-Object System.Windows.Controls.Button
+$ClearReports.Content = "Clear Reports Folder"
+$ClearReports.Margin = 5
+$ClearReports.Add_Click({
+    ShowFileSelectionPopup
+})
+$mainContainer.Children.Add($ClearReports)
+
+# Function to show the file selection popup
+function ShowFileSelectionPopup {
+    # Create the popup window
+    $popupWindow = New-Object System.Windows.Window
+    $popupWindow.Title = "Select Files to Delete"
+    $popupWindow.Width = 400
+    $popupWindow.Height = 300
+    $popupWindow.WindowStartupLocation = 'CenterScreen'
+
+    # Create a StackPanel to hold the controls in the popup window
+    $popupStackPanel = New-Object System.Windows.Controls.StackPanel
+    $popupStackPanel.Orientation = "Vertical"
+    $popupStackPanel.Margin = 10
+
+    # Create a ListBox to display the files
+    $listBox = New-Object System.Windows.Controls.ListBox
+    $listBox.SelectionMode = "Extended"
+    $popupStackPanel.Children.Add($listBox)
+
+    # Create a button to delete the selected files
+    $deleteButton = New-Object System.Windows.Controls.Button
+    $deleteButton.Content = "Delete Selected Files"
+    $deleteButton.Margin = 5
+    $deleteButton.Add_Click({
+        $selectedItems = $listBox.SelectedItems
+        if ($selectedItems.Count -eq 0) {
+            [System.Windows.MessageBox]::Show("No files selected.", "Warning")
+        } else {
+            foreach ($item in $selectedItems) {
+                Remove-Item $item -Force
+            }
+            [System.Windows.MessageBox]::Show("Selected files deleted.", "Success")
+            RefreshFileList $listBox
+        }
+    })
+    $popupStackPanel.Children.Add($deleteButton)
+
+    # Create a button to refresh the file list
+    $refreshButton = New-Object System.Windows.Controls.Button
+    $refreshButton.Content = "Refresh File List"
+    $refreshButton.Margin = 5
+    $refreshButton.Add_Click({
+        RefreshFileList $listBox
+    })
+    $popupStackPanel.Children.Add($refreshButton)
+
+    # Add the StackPanel to the popup window
+    $popupWindow.Content = $popupStackPanel
+
+    # Function to refresh the file list
+    function RefreshFileList {
+        param ($listBox)
+        $listBox.Items.Clear()
+        $files = Get-ChildItem -Path $reportsDir
+        foreach ($file in $files) {
+            $listBox.Items.Add($file.Name)
+        }
+    }
+
+    # Initial load of file list
+    RefreshFileList $listBox
+
+    # Show the popup window
+    $popupWindow.ShowDialog() | Out-Null
+}
 
 # Exit button to close the launcher
 $exitButton = New-Object System.Windows.Controls.Button
