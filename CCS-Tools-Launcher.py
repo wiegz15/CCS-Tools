@@ -6,7 +6,7 @@ import os
 import ctypes
 import shutil
 import urllib.request
-import zipfile
+
 
 def is_admin():
     try:
@@ -111,18 +111,17 @@ def create_tooltip(widget, text):
     widget.bind("<Enter>", enter)
     widget.bind("<Leave>", leave)
 
-def download_and_extract_git_portable(download_url, extract_to):
-    zip_path = os.path.join(extract_to, "git_portable.zip")
+def download_and_run_git_installer(download_url, install_to):
+    exe_path = os.path.join(install_to, "git_installer.exe")
 
-    # Download Git Portable
-    urllib.request.urlretrieve(download_url, zip_path)
+    # Download Git Installer
+    urllib.request.urlretrieve(download_url, exe_path)
 
-    # Extract Git Portable
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(extract_to)
+    # Run Git Installer with silent install options
+    subprocess.run([exe_path, "/SILENT", f"/DIR={install_to}"], check=True)
 
-    # Clean up zip file
-    os.remove(zip_path)
+    # Clean up exe file
+    os.remove(exe_path)
 
 def update_folders_from_github():
     repo_url = "https://github.com/wiegz15/CCS-Tools.git"
@@ -132,18 +131,18 @@ def update_folders_from_github():
     local_folder2 = "Vmware"
     
     update_dir = "Update"
-    git_portable_url = "https://github.com/git-for-windows/git/releases/download/v2.33.0.windows.2/PortableGit-2.33.0-64-bit.zip"  # URL for Git Portable zip
+    git_installer_url = "https://github.com/git-for-windows/git/releases/download/v2.45.2.windows.1/Git-2.45.2-64-bit.exe"  # URL for Git Installer exe
 
     try:
-        # Download and extract Git Portable if not already present
+        # Download and install Git if not already present
         git_executable = os.path.join(update_dir, "cmd", "git.exe")
         if not os.path.exists(git_executable):
             if not os.path.exists(update_dir):
                 os.makedirs(update_dir)
-            download_and_extract_git_portable(git_portable_url, update_dir)
+            download_and_run_git_installer(git_installer_url, update_dir)
 
         if not os.path.exists(git_executable):
-            raise FileNotFoundError("Git executable not found. Please check the Git Portable extraction.")
+            raise FileNotFoundError("Git executable not found. Please check the Git installation.")
 
         # Define temporary clone directory
         temp_dir = "temp_repo"
