@@ -5,6 +5,8 @@ import sys
 import os
 import ctypes
 import shutil
+import urllib.request
+import zipfile
 
 def is_admin():
     try:
@@ -109,6 +111,68 @@ def create_tooltip(widget, text):
     widget.bind("<Enter>", enter)
     widget.bind("<Leave>", leave)
 
+def download_and_extract_git_portable(download_url, extract_to):
+    zip_path = os.path.join(extract_to, "git_portable.zip")
+
+    # Download Git Portable
+    urllib.request.urlretrieve(download_url, zip_path)
+
+    # Extract Git Portable
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_to)
+
+    # Clean up zip file
+    os.remove(zip_path)
+
+def update_folders_from_github():
+    repo_url = "https://github.com/wiegz15/CCS-Tools.git"
+    folder1 = "AD"
+    folder2 = "Vmware"
+    local_folder1 = "AD"
+    local_folder2 = "Vmware"
+    
+    update_dir = "Update"
+    git_portable_url = "https://github.com/git-for-windows/git/releases/download/v2.33.0.windows.2/PortableGit-2.33.0-64-bit.zip"  # URL for Git Portable zip
+
+    try:
+        # Download and extract Git Portable if not already present
+        git_executable = os.path.join(update_dir, "cmd", "git.exe")
+        if not os.path.exists(git_executable):
+            if not os.path.exists(update_dir):
+                os.makedirs(update_dir)
+            download_and_extract_git_portable(git_portable_url, update_dir)
+
+        if not os.path.exists(git_executable):
+            raise FileNotFoundError("Git executable not found. Please check the Git Portable extraction.")
+
+        # Define temporary clone directory
+        temp_dir = "temp_repo"
+
+        # Clone the GitHub repository to a temporary directory
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+        subprocess.run([git_executable, "clone", repo_url, temp_dir], check=True)
+
+        # Paths to the folders in the cloned repository
+        repo_folder1 = os.path.join(temp_dir, folder1)
+        repo_folder2 = os.path.join(temp_dir, folder2)
+
+        # Update local folders with the contents from the repository
+        if os.path.exists(local_folder1):
+            shutil.rmtree(local_folder1)
+        shutil.copytree(repo_folder1, local_folder1)
+
+        if os.path.exists(local_folder2):
+            shutil.rmtree(local_folder2)
+        shutil.copytree(repo_folder2, local_folder2)
+
+        # Clean up the temporary directory
+        shutil.rmtree(temp_dir)
+
+        messagebox.showinfo("Success", f"Updated {local_folder1} and {local_folder2} with the latest versions from the GitHub repository.")
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+
 def main():
     run_as_admin()
     extract_folder('Update')
@@ -145,7 +209,7 @@ def main():
 
     create_button(frame, 'VMware Toolset', lambda: run_script(os.path.join(vmware_path, "vmware_launcher_new.ps1")), 5, 0, "Launch VMware Toolset")
     create_button(frame, 'AD Toolset', lambda: run_script(os.path.join(ad_path, "AD_launcher.ps1")), 5, 1, "Launch Active Directory Toolset")
-    create_button(frame, 'Update Tools', lambda: run_script(os.path.join(update_path, "Update Tools.ps1")), 6, 0, "Check and Update Tools")
+    create_button(frame, 'Update Tools', update_folders_from_github, 6, 0, "Check and Update Tools")
     create_button(frame, 'Install PS Modules', lambda: run_script(os.path.join(update_path, "Install Modules.ps1")), 8, 0, "Check and Update PowerShell Modules")
     create_button(frame, 'Install RSAT Tools', lambda: run_script(os.path.join(rsat_path, "Install RSAT Tools.ps1")), 8, 1, "Install RSAT Tools")
 
