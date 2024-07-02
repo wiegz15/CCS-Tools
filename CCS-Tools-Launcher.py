@@ -131,15 +131,16 @@ def update_folders_from_github():
     local_folder2 = "Vmware"
     
     update_dir = "Update"
+    git_install_dir = os.path.join(update_dir, "gitportable")
     git_installer_url = "https://github.com/git-for-windows/git/releases/download/v2.45.2.windows.1/Git-2.45.2-64-bit.exe"  # URL for Git Installer exe
 
     try:
         # Download and install Git if not already present
-        git_executable = os.path.join(update_dir, "cmd", "git.exe")
+        git_executable = os.path.join(git_install_dir, "cmd", "git.exe")
         if not os.path.exists(git_executable):
-            if not os.path.exists(update_dir):
-                os.makedirs(update_dir)
-            download_and_run_git_installer(git_installer_url, update_dir)
+            if not os.path.exists(git_install_dir):
+                os.makedirs(git_install_dir)
+            download_and_run_git_installer(git_installer_url, git_install_dir)
 
         if not os.path.exists(git_executable):
             raise FileNotFoundError("Git executable not found. Please check the Git installation.")
@@ -147,9 +148,11 @@ def update_folders_from_github():
         # Define temporary clone directory
         temp_dir = "temp_repo"
 
-        # Clone the GitHub repository to a temporary directory
+        # Ensure temp_dir is clean
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
+
+        # Clone the GitHub repository to a temporary directory
         subprocess.run([git_executable, "clone", repo_url, temp_dir], check=True)
 
         # Paths to the folders in the cloned repository
@@ -170,6 +173,13 @@ def update_folders_from_github():
 
         messagebox.showinfo("Success", f"Updated {local_folder1} and {local_folder2} with the latest versions from the GitHub repository.")
     except Exception as e:
+        # Attempt to clean up the temporary directory in case of error
+        if os.path.exists(temp_dir):
+            try:
+                shutil.rmtree(temp_dir)
+            except Exception as cleanup_error:
+                messagebox.showerror("Cleanup Error", f"Failed to clean up temp directory: {cleanup_error}")
+
         messagebox.showerror("Error", str(e))
 
 def main():
