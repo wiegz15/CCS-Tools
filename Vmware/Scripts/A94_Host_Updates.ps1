@@ -49,10 +49,10 @@ $excelPath = Join-Path -Path $reportsDir -ChildPath "VMware_Output.xlsx"
 
 # Get the name of the current script for the worksheet name
 
-$worksheetName = "HostUptime"
+$worksheetName = "HostPatchLevel"
 
 # Export the results to an Excel file
-$complianceResults | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "HostUptime"
+$complianceResults | Export-Excel -Path $excelPath -WorksheetName $worksheetName -AutoSize -TableName "HostPatchLevel"
 
 
 
