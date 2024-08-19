@@ -1,6 +1,6 @@
 # CCS Tools Launcher
 
-CCS Tools Launcher is a Python-based application that provides a graphical user interface (GUI) for running various PowerShell scripts related to VMware, Active Directory, and other tools. It ensures that the required scripts are executed with administrative privileges and checks the status of installed tools.
+CCS Tools Launcher is a Python-based application that provides a graphical user interface (GUI) for running various PowerShell scripts related to VMware, Active Directory, and other tools. It ensures that the required scripts are executed with administrative privileges and checks the status of installed tools. \*
 
 ## Features
 
