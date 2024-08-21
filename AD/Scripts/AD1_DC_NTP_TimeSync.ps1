@@ -31,5 +31,5 @@ foreach ($dc in $domainControllers) {
 
 # Export to Excel
 $excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
-$results | Select-Object ComputerName, TimeSource, TimeStatus | Export-Excel -Path $excelPath -WorksheetName "Time Sync Status" -AutoSize -TableName "TimeSyncInfo" -TableStyle Medium9 -BoldTopRow -FreezeTopRow -Append
+$results | Select-Object ComputerName, TimeSource, TimeStatus | Export-Excel -Path $excelPath -WorksheetName "DC_NTP_TimeSync" -AutoSize -TableName "DC_NTP_TimeSync" -TableStyle Medium9 -BoldTopRow -FreezeTopRow -Append
 

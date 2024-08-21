@@ -18,30 +18,38 @@ foreach ($machine in $machines) {
     foreach ($scope in $AllScopes) {
         $ScopeName = $scope.Name
         $ScopeId = $scope.ScopeId
-        
+        $LeaseDuration = $scope.LeaseDuration
+
         # Retrieve scope statistics
         $ScopeStats = Get-DhcpServerv4ScopeStatistics -ScopeId $ScopeId -ComputerName $DHCPName
-        
+
         # Gather the statistics
         $ScopePercentInUse = $ScopeStats.PercentageInUse
         $Addfree = $ScopeStats.AddressesFree
         $AddUse = $ScopeStats.AddressesInUse
-        
+
+        # Calculate the scope size
+        $ScopeSize = $Addfree + $AddUse
+
         # Create a custom object with the data
         $obj = [PSCustomObject]@{
             DHCPServer      = $DHCPName
             ScopeName       = $ScopeName
             ScopeID         = $ScopeId
+            LeaseDuration   = $LeaseDuration
             FreeAddresses   = $Addfree
             AddressesInUse  = $AddUse
             PercentInUse    = $ScopePercentInUse
+            ScopeSize       = $ScopeSize # New column for scope size
         }
-        
+
         # Add the object to the array
         $data += $obj
     }
 }
 
-
+# Define the path to save the Excel file
 $excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
+
+# Export the data to an Excel file
 $data | Export-Excel -Path $excelPath -WorksheetName "DHCP_Scopes" -AutoSize -TableName "DHCP_Scopes" -TableStyle Medium11 -Append

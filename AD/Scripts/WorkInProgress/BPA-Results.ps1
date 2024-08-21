@@ -1,105 +1,73 @@
 # Import necessary modules
 Import-Module ServerManager
 Import-Module ActiveDirectory
-Import-Module ImportExcel
 
-# Function to get servers with a specific role from Active Directory
-function Get-ServersWithRole {
-    param (
-        [string]$RoleName
-    )
-    
-    switch ($RoleName) {
-        "AD-Domain-Services" { $filter = '(ObjectClass -eq "computer") -and (ServicePrincipalName -like "ldap*")' }
-        "DNS" { $filter = '(ObjectClass -eq "computer") -and (ServicePrincipalName -like "dns*")' }
-        default { Write-Error "RoleName not recognized"; return @() }
-    }
-    
-    $servers = Get-ADComputer -Filter $filter -Property Name | Select-Object -ExpandProperty Name
-    return $servers
-}
+# Ensure BPA modules are updated
+Write-Output "Updating BPA modules..."
+Update-Help -Module ServerManager
 
-# Get servers for DirectoryServices and DNSServer roles
-$DirectoryServicesServers = Get-ServersWithRole -RoleName "AD-Domain-Services"
-$DNSServers = Get-ServersWithRole -RoleName "DNS"
+# Define BPA Model IDs to run
+$BpaModels = @(
+    "Microsoft/Windows/DirectoryServices",
+    "Microsoft/Windows/DNSServer",
+    "Microsoft/Windows/FileServices"
+)
 
-# Combine the lists of servers and remove duplicates
-$allServers = $DirectoryServicesServers + $DNSServers | Sort-Object -Unique
+# Get the current domain
+$currentDomain = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()
 
-# Display the list of servers and allow the user to select
-$selectedServers = $allServers | Out-GridView -Title "Select Servers to Run BPA Models" -PassThru
+# Get a list of domain controllers in the Domain Controllers OU
+$domainControllers = Get-ADComputer -Filter { Name -like "*" } -SearchBase "OU=Domain Controllers,DC=$($currentDomain.Name -replace '\.', ',DC=')" -Properties Name | Select-Object -ExpandProperty Name
 
 # Create arrays to hold results
-$directoryServicesResults = @()
-$dnsServerResults = @()
+$allResults = @()
 
-# Function to run BPA models and collect results
-function Run-BPAModels {
+# Function to run BPA checks on a remote server and add the server name to each result
+function Get-BPAResultsRemote {
     param (
-        [string]$Model,
-        [string]$Server
+        [string]$server,
+        [array]$BpaModels
     )
     
-    Invoke-Command -ComputerName $Server -ScriptBlock {
-        param ($model)
-        
-        # Run the BPA model and collect results
-        try {
+    Invoke-Command -ComputerName $server -ScriptBlock {
+        param ($BpaModels, $serverName)
+        $results = @()
+        foreach ($model in $BpaModels) {
             Invoke-BPAModel -ModelId $model
             $modelResults = Get-BPAResult -ModelId $model
-            return $modelResults
-        } catch {
-            Write-Warning "Failed to invoke BPA model $model on server $using:Server"
-            return @()
+            foreach ($result in $modelResults) {
+                $result | Add-Member -MemberType NoteProperty -Name DomainController -Value $serverName
+                $results += $result
+            }
         }
-    } -ArgumentList $Model
+        return $results
+    } -ArgumentList $BpaModels, $server
 }
 
-# Run BPA models on selected servers
-foreach ($server in $selectedServers) {
-    Write-Output "Running DirectoryServices BPA model on server: $server"
-    $results = Run-BPAModels -Model "Microsoft/Windows/DirectoryServices" -Server $server
-    $directoryServicesResults += $results | ForEach-Object {
-        [PSCustomObject]@{
-            Server        = $server
-            ModelId       = $_.ModelId
-            SourceId      = $_.SourceId
-            RuleId        = $_.RuleId
-            Title         = $_.Title
-            Severity      = $_.Severity
-            Category      = $_.Category
-            Problem       = $_.Problem
-            Impact        = $_.Impact
-            Resolution    = $_.Resolution
-            LastScanTime  = $_.LastScanTime
-        }
-    }
-
-    Write-Output "Running DNSServer BPA model on server: $server"
-    $results = Run-BPAModels -Model "Microsoft/Windows/DNSServer" -Server $server
-    $dnsServerResults += $results | ForEach-Object {
-        [PSCustomObject]@{
-            Server        = $server
-            ModelId       = $_.ModelId
-            SourceId      = $_.SourceId
-            RuleId        = $_.RuleId
-            Title         = $_.Title
-            Severity      = $_.Severity
-            Category      = $_.Category
-            Problem       = $_.Problem
-            Impact        = $_.Impact
-            Resolution    = $_.Resolution
-            LastScanTime  = $_.LastScanTime
-        }
-    }
+# Run BPA checks on each domain controller and collect results
+foreach ($dc in $domainControllers) {
+    Write-Output "Running BPA checks on $dc..."
+    $results = Get-BPAResultsRemote -server $dc -BpaModels $BpaModels
+    $allResults += $results
 }
 
-# Filter out Information severity
-$directoryServicesFiltered = $directoryServicesResults | Where-Object { $_.Severity -ne 'Information' }
-$dnsServerFiltered = $dnsServerResults | Where-Object { $_.Severity -ne 'Information' }
+# Filter out 'Information' severity results
+$filteredResults = $allResults | Where-Object { $_.Severity -ne 'Information' }
 
-# Export results to an Excel file with two sheets
-$excelPath = Join-Path -Path $reportsDir -ChildPath "BPAResults.xlsx"
-$directoryServicesFiltered | Export-Excel -Path $excelPath -AutoSize -Title "Directory Services BPA Results" -WorksheetName "DirectoryServices"
-$dnsServerFiltered | Export-Excel -Path $excelPath -AutoSize -Title "DNS Server BPA Results" -WorksheetName "DNSServer" -Append
+# Set file paths to the temp directory
+$tempPath = [System.IO.Path]::GetTempPath()
+$csvFilePath = Join-Path -Path $tempPath -ChildPath "BPAResults.csv"
+$htmlFilePath = Join-Path -Path $tempPath -ChildPath "BPAResults.html"
 
+# Export results to CSV
+$filteredResults | Export-Csv -Path $csvFilePath -NoTypeInformation
+
+# Export results to HTML
+$filteredResults | ConvertTo-Html -Property DomainController, ModelId, Title, Severity, Problem, Impact, Resolution -Title "BPA Results" | Out-File -FilePath $htmlFilePath
+
+# Output file paths for user reference
+Write-Output "CSV file saved to: $csvFilePath"
+Write-Output "HTML file saved to: $htmlFilePath"
+
+# Open the HTML file
+Start-Process $htmlFilePath

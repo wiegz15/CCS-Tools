@@ -32,4 +32,4 @@ foreach ($dc in $domainControllers) {
 
 # Export to Excel
 $excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
-$generalInfo | Export-Excel -Path $excelPath -WorksheetName "General Info" -AutoSize -TableName "GeneralInfo" -TableStyle Medium9 -BoldTopRow -FreezeTopRow
+$generalInfo | Export-Excel -Path $excelPath -WorksheetName "FSMO-DOMAINLEVEL" -AutoSize -TableName "FSMO-DOMAINLEVEL" -TableStyle Medium9 -BoldTopRow -FreezeTopRow

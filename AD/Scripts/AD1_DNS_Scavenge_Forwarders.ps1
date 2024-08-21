@@ -34,4 +34,4 @@ foreach ($dc in $domainControllers) {
 
 # Optionally, export to Excel
 $excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
-$dnsSettings | Export-Excel -Path $excelPath -WorksheetName "DNS Settings" -AutoSize -TableName "DNSSettings" -TableStyle Medium10 -Append
+$dnsSettings | Export-Excel -Path $excelPath -WorksheetName "DNS-Scavenge-Forworder" -AutoSize -TableName "DNS-Scavenge-Forworder" -TableStyle Medium10 -Append
