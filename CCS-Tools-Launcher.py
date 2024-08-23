@@ -111,18 +111,6 @@ def create_tooltip(widget, text):
     widget.bind("<Enter>", enter)
     widget.bind("<Leave>", leave)
 
-def download_and_run_git_installer(download_url, install_to):
-    exe_path = os.path.join(install_to, "git_installer.exe")
-
-    # Download Git Installer
-    urllib.request.urlretrieve(download_url, exe_path)
-
-    # Run Git Installer with silent install options
-    subprocess.run([exe_path, "/SILENT", f"/DIR={install_to}"], check=True)
-
-    # Clean up exe file
-    os.remove(exe_path)
-
 def update_folders_from_github():
     repo_url = "https://github.com/wiegz15/CCS-Tools.git"
     folder1 = "AD"
@@ -131,8 +119,8 @@ def update_folders_from_github():
     local_folder2 = "Vmware"
     
     update_dir = "Update"
-    git_install_dir = os.path.join(update_dir, "gitportable")
-    git_installer_url = "https://github.com/git-for-windows/git/releases/download/v2.45.2.windows.1/Git-2.45.2-64-bit.exe"  # URL for Git Installer exe
+    git_install_dir = os.path.join(update_dir, "PortableGit")
+    git_installer_url = "https://github.com/git-for-windows/git/releases/download/v2.45.2.windows.1/PortableGit-2.45.2-64-bit.7z.exe"
 
     try:
         # Download and install Git if not already present
@@ -140,13 +128,22 @@ def update_folders_from_github():
         if not os.path.exists(git_executable):
             if not os.path.exists(git_install_dir):
                 os.makedirs(git_install_dir)
-            download_and_run_git_installer(git_installer_url, git_install_dir)
+            
+            # Download PortableGit
+            portable_git_exe = os.path.join(update_dir, "PortableGit.exe")
+            urllib.request.urlretrieve(git_installer_url, portable_git_exe)
+            
+            # Extract PortableGit
+            subprocess.run([portable_git_exe, "-y", "-gm2", "-nr", "-o{}".format(git_install_dir)], check=True)
+            
+            # Clean up the installer
+            os.remove(portable_git_exe)
 
         if not os.path.exists(git_executable):
             raise FileNotFoundError("Git executable not found. Please check the Git installation.")
 
         # Define temporary clone directory
-        temp_dir = "temp_repo"
+        temp_dir = os.path.join(update_dir, "temp_repo")
 
         # Ensure temp_dir is clean
         if os.path.exists(temp_dir):
@@ -179,7 +176,6 @@ def update_folders_from_github():
                 shutil.rmtree(temp_dir)
             except Exception as cleanup_error:
                 messagebox.showerror("Cleanup Error", f"Failed to clean up temp directory: {cleanup_error}")
-
         messagebox.showerror("Error", str(e))
 
 def main():

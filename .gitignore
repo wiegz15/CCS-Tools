@@ -13,4 +13,5 @@ Launcher.spec
 /OLD
 /ExeBuild
 PortableGit.7z.Exe
-/Update/GitPortable
+/Update/PortableGit
+/Update/temp_repo
