@@ -85,6 +85,18 @@ function Refresh-Scripts {
     })
     $mainStackPanel1.Children.Add($selectAllCheckboxTab1)
 
+    # Load scripts for Tab 1 (AD Health)
+    $scriptFiles1 = Get-ChildItem -Path $adScriptsDir -Filter *.ps1 | Sort-Object Name
+    foreach ($scriptFile in $scriptFiles1) {
+        $checkBox = New-Object System.Windows.Controls.CheckBox
+        $checkBox.Content = $scriptFile.Name
+        $checkBox.Margin = 5
+        $mainStackPanel1.Children.Add($checkBox)
+    }
+
+    # Re-add the Execute button for Tab 1 after reloading scripts
+    $mainStackPanel1.Children.Add($executeButton1)
+
     # Create new "Select All" checkbox for Tab 2
     $selectAllCheckboxTab2 = New-Object System.Windows.Controls.CheckBox
     $selectAllCheckboxTab2.Content = "Select All"
@@ -101,15 +113,6 @@ function Refresh-Scripts {
     })
     $mainStackPanel2.Children.Add($selectAllCheckboxTab2)
 
-    # Load scripts for Tab 1 (AD Health)
-    $scriptFiles1 = Get-ChildItem -Path $adScriptsDir -Filter *.ps1 | Sort-Object Name
-    foreach ($scriptFile in $scriptFiles1) {
-        $checkBox = New-Object System.Windows.Controls.CheckBox
-        $checkBox.Content = $scriptFile.Name
-        $checkBox.Margin = 5
-        $mainStackPanel1.Children.Add($checkBox)
-    }
-
     # Load scripts for Tab 2 (Other)
     $scriptFiles2 = Get-ChildItem -Path $Otherscripts -Filter *.ps1 | Sort-Object Name
     foreach ($scriptFile in $scriptFiles2) {
@@ -118,6 +121,9 @@ function Refresh-Scripts {
         $checkBox.Margin = 5
         $mainStackPanel2.Children.Add($checkBox)
     }
+
+    # Re-add the Execute button for Tab 2 after reloading scripts
+    $mainStackPanel2.Children.Add($executeButton2)
 }
 
 # Define the main window
