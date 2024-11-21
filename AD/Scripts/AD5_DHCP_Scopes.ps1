@@ -1,55 +1,72 @@
-# Load the ImportExcel module
-Import-Module ImportExcel
+# Ensure that the DHCP Server PowerShell module is loaded
+Import-Module DhcpServer
 
-# Retrieve all DHCP servers in the domain
-$machines = Get-DhcpServerInDC
-
-# Initialize an array to hold the data
-$data = @()
-
-# Iterate through each DHCP server
-foreach ($machine in $machines) {
-    $DHCPName = $machine.DnsName
-    
-    # Retrieve all scopes for the current DHCP server
-    $AllScopes = Get-DhcpServerv4Scope -ComputerName $DHCPName
-    
-    # Iterate through each scope
-    foreach ($scope in $AllScopes) {
-        $ScopeName = $scope.Name
-        $ScopeId = $scope.ScopeId
-        $LeaseDuration = $scope.LeaseDuration
-
-        # Retrieve scope statistics
-        $ScopeStats = Get-DhcpServerv4ScopeStatistics -ScopeId $ScopeId -ComputerName $DHCPName
-
-        # Gather the statistics
-        $ScopePercentInUse = $ScopeStats.PercentageInUse
-        $Addfree = $ScopeStats.AddressesFree
-        $AddUse = $ScopeStats.AddressesInUse
-
-        # Calculate the scope size
-        $ScopeSize = $Addfree + $AddUse
-
-        # Create a custom object with the data
-        $obj = [PSCustomObject]@{
-            DHCPServer      = $DHCPName
-            ScopeName       = $ScopeName
-            ScopeID         = $ScopeId
-            LeaseDuration   = $LeaseDuration
-            FreeAddresses   = $Addfree
-            AddressesInUse  = $AddUse
-            PercentInUse    = $ScopePercentInUse
-            ScopeSize       = $ScopeSize # New column for scope size
-        }
-
-        # Add the object to the array
-        $data += $obj
-    }
+# Function to convert IP address to an integer
+function ConvertTo-Int {
+    param (
+        [IPAddress]$ip
+    )
+    $bytes = $ip.GetAddressBytes()
+    return [bitconverter]::ToUInt32($bytes[3..0], 0)
 }
 
-# Define the path to save the Excel file
-$excelPath = Join-Path -Path $reportsDir -ChildPath "AD_Output.xlsx"
+# Function to get DHCP servers in the domain
+function Get-DomainDHCPServers {
+    $dhcpServers = Get-DhcpServerInDC
+    return $dhcpServers | Select-Object DNSName, IPAddress
+}
 
-# Export the data to an Excel file
-$data | Export-Excel -Path $excelPath -WorksheetName "DHCP_Scopes" -AutoSize -TableName "DHCP_Scopes" -TableStyle Medium11 -Append
+# Function to get DHCP scope information
+function Get-DHCPScopeInfo {
+    param (
+        [string]$DHCPServer
+    )
+    
+    # Initialize an array to store DHCP scope information
+    $scopeInfo = @()
+
+    # Get all DHCP scopes from the specified server
+    $scopes = Get-DhcpServerv4Scope -ComputerName $DHCPServer
+
+    foreach ($scope in $scopes) {
+        # Get scope details
+        $scopeID = $scope.ScopeId
+        $totalAddresses = (ConvertTo-Int $scope.EndRange) - (ConvertTo-Int $scope.StartRange) + 1
+        $leasedAddresses = (Get-DhcpServerv4Lease -ScopeId $scopeID -ComputerName $DHCPServer).Count
+        $availableAddresses = $totalAddresses - $leasedAddresses
+        
+        # Create a custom object with the required information
+        $scopeInfo += [pscustomobject]@{
+            "ScopeName"        = $scope.Name
+            "ScopeIPRange"     = "$($scope.StartRange) - $($scope.EndRange)"
+            "TotalIPAddresses" = $totalAddresses
+            "IssuedIPAddresses"= $leasedAddresses
+            "AvailableIPs"     = $availableAddresses
+        }
+    }
+
+    return $scopeInfo
+}
+
+# Main script
+# Get DHCP servers in the domain
+$dhcpServers = Get-DomainDHCPServers
+
+# Display DHCP servers in Out-GridView and let user select one
+$selectedServer = $dhcpServers | Out-GridView -Title "Select a DHCP Server" -OutputMode Single
+
+if ($selectedServer) {
+    $dhcpServerName = $selectedServer.DNSName
+
+    # Get DHCP scope information
+    $scopeInfo = Get-DHCPScopeInfo -DHCPServer $dhcpServerName
+
+    $excelPath = Join-Path -Path $reportsDir -ChildPath "DHCP_Scope_Report.xlsx"
+
+    # Export the data to an Excel file
+    $scopeInfo | Export-Excel -Path $excelPath -WorksheetName "DHCP_Scopes" -AutoSize -TableName "DHCP_Scopes" -TableStyle Medium11 -Append
+
+    Write-Host "DHCP scope report for server $dhcpServerName has been generated and saved to: $excelPath"
+} else {
+    Write-Host "No DHCP server was selected. Exiting script."
+}

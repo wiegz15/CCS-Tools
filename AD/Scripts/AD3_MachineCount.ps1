@@ -1,12 +1,15 @@
 # Import the Active Directory module
 Import-Module ActiveDirectory
 
-# Get all computer objects from Active Directory that are not disabled
-$computers = Get-ADComputer -Filter {Enabled -eq $true} -Property Name
+# Calculate the date 60 days ago
+$60DaysAgo = (Get-Date).AddDays(-60).ToFileTime()
+
+# Get all computer objects from Active Directory that are not disabled and have logged on in the past 60 days
+$computers = Get-ADComputer -Filter {Enabled -eq $true -and lastLogonTimestamp -ge $60DaysAgo} -Properties Name, lastLogonTimestamp
 
 # Create a custom object to hold the total count
 $totalCount = [PSCustomObject]@{
-    'Total Active Computers' = $computers.Count
+    'Total Active Computers (Last 60 Days)' = $computers.Count
 }
 
 

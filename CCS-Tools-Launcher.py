@@ -6,7 +6,8 @@ import os
 import ctypes
 import shutil
 import urllib.request
-
+import json
+import datetime
 
 def is_admin():
     try:
@@ -111,18 +112,6 @@ def create_tooltip(widget, text):
     widget.bind("<Enter>", enter)
     widget.bind("<Leave>", leave)
 
-def download_and_run_git_installer(download_url, install_to):
-    exe_path = os.path.join(install_to, "git_installer.exe")
-
-    # Download Git Installer
-    urllib.request.urlretrieve(download_url, exe_path)
-
-    # Run Git Installer with silent install options
-    subprocess.run([exe_path, "/SILENT", f"/DIR={install_to}"], check=True)
-
-    # Clean up exe file
-    os.remove(exe_path)
-
 def update_folders_from_github():
     repo_url = "https://github.com/wiegz15/CCS-Tools.git"
     folder1 = "AD"
@@ -131,8 +120,8 @@ def update_folders_from_github():
     local_folder2 = "Vmware"
     
     update_dir = "Update"
-    git_install_dir = os.path.join(update_dir, "gitportable")
-    git_installer_url = "https://github.com/git-for-windows/git/releases/download/v2.45.2.windows.1/Git-2.45.2-64-bit.exe"  # URL for Git Installer exe
+    git_install_dir = os.path.join(update_dir, "PortableGit")
+    git_installer_url = "https://github.com/git-for-windows/git/releases/download/v2.45.2.windows.1/PortableGit-2.45.2-64-bit.7z.exe"
 
     try:
         # Download and install Git if not already present
@@ -140,13 +129,22 @@ def update_folders_from_github():
         if not os.path.exists(git_executable):
             if not os.path.exists(git_install_dir):
                 os.makedirs(git_install_dir)
-            download_and_run_git_installer(git_installer_url, git_install_dir)
+            
+            # Download PortableGit
+            portable_git_exe = os.path.join(update_dir, "PortableGit.exe")
+            urllib.request.urlretrieve(git_installer_url, portable_git_exe)
+            
+            # Extract PortableGit
+            subprocess.run([portable_git_exe, "-y", "-gm2", "-nr", "-o{}".format(git_install_dir)], check=True)
+            
+            # Clean up the installer
+            os.remove(portable_git_exe)
 
         if not os.path.exists(git_executable):
             raise FileNotFoundError("Git executable not found. Please check the Git installation.")
 
         # Define temporary clone directory
-        temp_dir = "temp_repo"
+        temp_dir = os.path.join(update_dir, "temp_repo")
 
         # Ensure temp_dir is clean
         if os.path.exists(temp_dir):
@@ -172,6 +170,9 @@ def update_folders_from_github():
         shutil.rmtree(temp_dir)
 
         messagebox.showinfo("Success", f"Updated {local_folder1} and {local_folder2} with the latest versions from the GitHub repository.")
+        
+        # After successful update, update the status label
+        update_status_label()
     except Exception as e:
         # Attempt to clean up the temporary directory in case of error
         if os.path.exists(temp_dir):
@@ -179,8 +180,88 @@ def update_folders_from_github():
                 shutil.rmtree(temp_dir)
             except Exception as cleanup_error:
                 messagebox.showerror("Cleanup Error", f"Failed to clean up temp directory: {cleanup_error}")
-
         messagebox.showerror("Error", str(e))
+
+def check_for_updates():
+    repo_owner = "wiegz15"
+    repo_name = "CCS-Tools"
+    api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/commits"
+    folders_to_check = ["AD", "Vmware"]
+    
+    local_commit_file = "last_commit.json"
+    token_file_path = os.path.join("Update", "github_token.txt")
+    
+    try:
+        # Read the token from the file in the Update folder
+        if not os.path.exists(token_file_path):
+            return False, f"Error: GitHub token file not found. Please ensure 'github_token.txt' is in the Update folder. Last checked: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        
+        with open(token_file_path, 'r') as token_file:
+            token = token_file.read().strip()
+
+        if not token:
+            return False, f"Error: GitHub token is empty. Please add your token to 'github_token.txt' in the Update folder. Last checked: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+
+        headers = {
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+
+        req = urllib.request.Request(api_url, headers=headers)
+        
+        with urllib.request.urlopen(req) as response:
+            commits = json.loads(response.read().decode())
+        
+        latest_commit = commits[0]
+        latest_commit_hash = latest_commit['sha']
+        latest_commit_date = latest_commit['commit']['author']['date']
+        
+        if os.path.exists(local_commit_file):
+            with open(local_commit_file, 'r') as f:
+                last_known_commit = json.load(f)
+        else:
+            last_known_commit = {"hash": "", "date": ""}
+        
+        if latest_commit_hash != last_known_commit["hash"]:
+            changed_folders = set()
+            for commit in commits:
+                if commit['sha'] == last_known_commit["hash"]:
+                    break
+                
+                commit_url = commit['url']
+                req = urllib.request.Request(commit_url, headers=headers)
+                with urllib.request.urlopen(req) as response:
+                    commit_data = json.loads(response.read().decode())
+                
+                for file in commit_data['files']:
+                    for folder in folders_to_check:
+                        if file['filename'].startswith(folder + '/'):
+                            changed_folders.add(folder)
+            
+            if changed_folders:
+                folder_list = ", ".join(changed_folders)
+                return False, f"Updates available for: {folder_list}. Last checked: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+            else:
+                return True, f"Up to date. Last checked: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        else:
+            return True, f"Up to date. Last checked: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+
+        # Save the latest commit hash
+        with open(local_commit_file, 'w') as f:
+            json.dump({"hash": latest_commit_hash, "date": latest_commit_date}, f)
+
+    except urllib.error.HTTPError as e:
+        if e.code == 403:
+            return False, f"Error 403: Forbidden. Please check your GitHub token and permissions. Last checked: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        else:
+            return False, f"HTTP Error {e.code}: {e.reason}. Last checked: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    except Exception as e:
+        return False, f"Error checking updates: {str(e)}. Last checked: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+
+def update_status_label():
+    is_up_to_date, status_message = check_for_updates()
+    color = "green" if is_up_to_date else "red"
+    status_label.config(text=status_message, fg=color)
 
 def main():
     run_as_admin()
@@ -191,7 +272,7 @@ def main():
     global root
     root = tk.Tk()
     root.title('CCS Tools Launcher')
-    root.geometry('410x460')
+    root.geometry('500x500')  # Increased width to accommodate the status label
 
     frame = tk.Frame(root)
     frame.pack(padx=10, pady=10, fill='both', expand=True)
@@ -204,7 +285,7 @@ def main():
     label_frame.grid(row=0, column=0, sticky='w')
     create_label(label_frame, 'Tools Status:', 0, 0, color='blue')
 
-    refresh_icon = tk.PhotoImage(file=os.path.join(os.getcwd(), "Update","refresh_icon.png"))  # Ensure you have the icon file in the correct path
+    refresh_icon = tk.PhotoImage(file=os.path.join(os.getcwd(), "Update", "refresh_icon.png"))
     refresh_button = tk.Button(label_frame, image=refresh_icon, command=check_tools_status)
     refresh_button.grid(row=0, column=1, padx=5)
 
@@ -218,11 +299,24 @@ def main():
 
     create_button(frame, 'VMware Toolset', lambda: run_script(os.path.join(vmware_path, "vmware_launcher_new.ps1")), 5, 0, "Launch VMware Toolset")
     create_button(frame, 'AD Toolset', lambda: run_script(os.path.join(ad_path, "AD_launcher.ps1")), 5, 1, "Launch Active Directory Toolset")
-    create_button(frame, 'Update Tools', update_folders_from_github, 6, 0, "Check and Update Tools")
+    
+    update_button = create_button(frame, 'Update Tools', update_folders_from_github, 6, 0, "Check and Update Tools")
+    global status_label
+    status_label = tk.Label(frame, text="Checking for updates...", fg="black", wraplength=300, justify='left')
+    status_label.grid(row=6, column=1, padx=10, pady=10, sticky='w')
+    
     create_button(frame, 'Install PS Modules', lambda: run_script(os.path.join(update_path, "Install Modules.ps1")), 8, 0, "Check and Update PowerShell Modules")
     create_button(frame, 'Install RSAT Tools', lambda: run_script(os.path.join(rsat_path, "Install RSAT Tools.ps1")), 8, 1, "Install RSAT Tools")
 
     check_tools_status()
+    update_status_label()  # Initial check for updates
+
+    # Schedule periodic update checks
+    def periodic_update_check():
+        update_status_label()
+        root.after(3600000, periodic_update_check)  # Check every hour (3600000 ms)
+
+    root.after(0, periodic_update_check)  # Start the periodic checks
 
     root.mainloop()
 
